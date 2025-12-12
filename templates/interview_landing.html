@@ -113,45 +113,53 @@
     </style>
 </head>
 <body>
-
+    
     <div class="glow"></div>
 
-    <div class="welcome-card">
-        <div class="job-badge">Interview Invitation</div>
+    <div class="d-flex flex-column align-items-center w-100" style="max-width: 500px;">
         
-        <h1>{{ job.title }}</h1>
-        <p class="text-muted fw-bold mb-4">{{ job.level }} Level</p>
-
-        <p class="desc">
-            Halo! Anda diundang untuk mengikuti sesi interview otomatis berbasis AI.
-            Silakan lengkapi data diri untuk memulai.
-        </p>
-
-        <div class="info-list">
-            <div class="info-item"><i class="fa-solid fa-list-ol"></i> {{ job.questions|length }} Pertanyaan</div>
-            <div class="info-item"><i class="fa-solid fa-clock"></i> Estimasi Waktu: 10-15 Menit</div>
-            <div class="info-item"><i class="fa-solid fa-microphone"></i> Wajib menggunakan Mikrofon</div>
+        <div class="w-100 mb-3 text-start">
+            <a href="/" class="text-decoration-none text-white opacity-75 icon-link icon-link-hover" style="transition: 0.3s;">
+                <i class="fa-solid fa-arrow-left me-2"></i> Kembali ke Daftar Lowongan
+            </a>
         </div>
 
-        <form action="/start-interview/{{ job.id }}" method="POST">
-            <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="name" name="name" placeholder="Nama Lengkap" required>
-                <label for="name">Nama Lengkap</label>
-            </div>
-            <div class="form-floating mb-3">
-                <input type="email" class="form-control" id="email" name="email" placeholder="Alamat Email" required>
-                <label for="email">Alamat Email</label>
+        <div class="welcome-card">
+            <div class="job-badge">Interview Invitation</div>
+            
+            <h1>{{ job.title }}</h1>
+            <p class="text-muted fw-bold mb-4">{{ job.level }} Level</p>
+
+            <p class="desc">
+                Halo! Anda diundang untuk mengikuti sesi interview otomatis berbasis AI.
+                Silakan lengkapi data diri untuk memulai.
+            </p>
+
+            <div class="info-list">
+                <div class="info-item"><i class="fa-solid fa-list-ol"></i> {{ job.questions|length }} Pertanyaan</div>
+                <div class="info-item"><i class="fa-solid fa-clock"></i> Estimasi Waktu: 10-15 Menit</div>
+                <div class="info-item"><i class="fa-solid fa-microphone"></i> Wajib menggunakan Mikrofon</div>
             </div>
 
-            <button type="submit" class="btn-start">
-                Mulai Sesi Interview <i class="fa-solid fa-arrow-right ms-2"></i>
-            </button>
-        </form>
+            <form action="/start-interview/{{ job.id }}" method="POST">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Nama Lengkap" required>
+                    <label for="name">Nama Lengkap</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Alamat Email" required>
+                    <label for="email">Alamat Email</label>
+                </div>
 
-        <div class="mt-4 small text-muted">
-            Powered by <strong>Axion AI</strong>
+                <button type="submit" class="btn-start">
+                    Mulai Sesi Interview <i class="fa-solid fa-arrow-right ms-2"></i>
+                </button>
+            </form>
+
+            <div class="mt-4 small text-muted">
+                Powered by <strong>Axion AI</strong>
+            </div>
         </div>
-    </div>
-
+    </div> 
 </body>
 </html>

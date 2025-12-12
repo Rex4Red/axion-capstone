@@ -26,7 +26,7 @@
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); } /* Mirror effect */
         
         /* Upload Tab Styling */
-        .nav-pills .nav-link { color: #888; border-radius: 50px; padding: 8px 20px; }
+        .nav-pills .nav-link { color: #888; border-radius: 50px; padding: 8px 20px; cursor: pointer; }
         .nav-pills .nav-link.active { background-color: #A35139; color: white; }
 
         /* Controls */
@@ -44,6 +44,10 @@
             background: rgba(255,0,0,0.8); z-index: 9999; display: none;
             align-items: center; justify-content: center; flex-direction: column;
         }
+        
+        /* Animasi Selesai */
+        .animate-bounce { animation: bounce 1s infinite alternate; }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
@@ -55,6 +59,31 @@
         <button class="btn btn-light rounded-pill fw-bold" onclick="closeCheatAlert()">Saya Mengerti</button>
     </div>
 
+    <div id="completionScreen" class="interview-container" style="display: none;">
+        <div class="question-card text-center p-5" style="max-width: 600px;">
+            <div class="mb-4">
+                <i class="fa-solid fa-circle-check fa-6x text-success animate-bounce"></i>
+            </div>
+            
+            <h1 class="fw-bold mb-3" style="color: #1B2632;">Luar Biasa!</h1>
+            
+            <p class="text-muted mb-4 fs-5">
+                Sesi interview Anda telah selesai. <br>
+                Jawaban video Anda berhasil tersimpan dan sedang diproses oleh AI.
+            </p>
+    
+            <div class="d-grid gap-2 col-8 mx-auto">
+                <a href="/" class="btn btn-dark rounded-pill py-3 fw-bold transition-all">
+                    <i class="fa-solid fa-house me-2"></i> Kembali ke Beranda
+                </a>
+            </div>
+            
+            <div class="mt-4 small text-muted">
+                <i class="fa-solid fa-envelope me-1"></i> Hasil akan dikirimkan via email.
+            </div>
+        </div>
+    </div>
+
     <div class="interview-container" id="mainArea">
         
         <div class="question-card">
@@ -63,8 +92,12 @@
         </div>
 
         <ul class="nav nav-pills mb-3 justify-content-center" id="pills-tab">
-            <li class="nav-item"><button class="nav-link active" onclick="switchMode('webcam')">Live Webcam</button></li>
-            <li class="nav-item"><button class="nav-link" onclick="switchMode('upload')">Upload Video</button></li>
+            <li class="nav-item">
+                <button class="nav-link active" onclick="switchMode('webcam')">Live Webcam</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" onclick="switchMode('upload')">Upload Video</button>
+            </li>
         </ul>
 
         <div id="webcamMode">
@@ -83,7 +116,10 @@
             <div class="card p-4 bg-dark border-secondary text-white" style="max-width: 500px;">
                 <label class="form-label">Pilih file video jawaban Anda (MP4/WebM)</label>
                 <input type="file" class="form-control mb-3" id="videoInput" accept="video/*">
-                <button class="btn btn-primary w-100" onclick="uploadManualFile()">Upload Video</button>
+                
+                <button id="btnUpload" class="btn btn-primary w-100 fw-bold" onclick="uploadManualFile()">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> Upload Video
+                </button>
             </div>
         </div>
 
@@ -105,21 +141,18 @@
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
-        let cheatCount = 0; // Menghitung pelanggaran
+        let cheatCount = 0; 
         let stream = null;
 
-        // Init
         document.getElementById('qTotal').innerText = questions.length;
         loadQuestion(currentIdx);
         initCamera();
 
-        // --- 1. LOGIC ANTI-CHEAT (TAB SWITCH DETECTION) ---
+        // 1. ANTI-CHEAT
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
                 cheatCount++;
-                // Tampilkan Layar Merah Peringatan
                 document.getElementById('cheatAlert').style.display = 'flex';
-                console.log("Curang terdeteksi! Total: " + cheatCount);
             }
         });
 
@@ -127,19 +160,18 @@
             document.getElementById('cheatAlert').style.display = 'none';
         }
 
-        // --- 2. LOGIC WEBCAM & RECORDING ---
+        // 2. WEBCAM
         async function initCamera() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('liveVideo').srcObject = stream;
             } catch (err) {
-                alert("Gagal akses kamera! Pastikan izin diberikan.");
+                console.log("Webcam error/blocked");
             }
         }
 
         function toggleRecording() {
             if (!isRecording) {
-                // Start
                 recordedChunks = [];
                 mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
                 
@@ -156,33 +188,40 @@
                 isRecording = true;
                 updateRecUI(true);
             } else {
-                // Stop
                 mediaRecorder.stop();
                 isRecording = false;
                 updateRecUI(false);
             }
         }
 
-        // --- 3. LOGIC UPLOAD MANUAL ---
+        // 3. UPLOAD MANUAL (Loading Animation)
         function uploadManualFile() {
             const fileInput = document.getElementById('videoInput');
+            const btn = document.getElementById('btnUpload'); 
+
             if (fileInput.files.length === 0) {
-                alert("Pilih file video dulu!");
+                alert("Pilih file video jawaban Anda terlebih dahulu!");
                 return;
             }
+
+            // Animasi Loading
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-2"></i> Mengupload & Menganalisis...';
+            btn.className = "btn btn-warning w-100 fw-bold"; 
+            btn.disabled = true; 
+
             sendData(fileInput.files[0]);
         }
 
-        // --- CORE: SEND DATA TO SERVER ---
+        // 4. KIRIM DATA KE SERVER
         function sendData(fileBlob) {
             document.getElementById('statusText').innerText = "Uploading Video & AI Analysis... (Sabar ya)";
-            document.getElementById('recordBtn').style.display = 'none'; // Cegah double klik
+            document.getElementById('recordBtn').style.display = 'none';
 
             const formData = new FormData();
-            formData.append('video', fileBlob); // Nama field jadi 'video'
+            formData.append('video', fileBlob);
             formData.append('candidate_id', candidateId);
             formData.append('question_id', questions[currentIdx].id);
-            formData.append('cheat_count', cheatCount); // Kirim data kecurangan
+            formData.append('cheat_count', cheatCount);
 
             fetch('/submit-answer', { method: 'POST', body: formData })
             .then(res => res.json())
@@ -190,8 +229,13 @@
                 if(data.status === 'success') {
                     document.getElementById('nextBtn').style.display = 'inline-block';
                     document.getElementById('statusText').innerText = "Tersimpan!";
-                    // Reset cheat count untuk soal berikutnya (opsional)
-                    // cheatCount = 0; 
+                    
+                    // Reset Tombol Upload jadi Sukses
+                    const btn = document.getElementById('btnUpload');
+                    if(btn) {
+                        btn.innerHTML = '<i class="fa-solid fa-check me-2"></i> Berhasil Terupload';
+                        btn.className = "btn btn-success w-100 fw-bold";
+                    }
                 } else {
                     alert("Gagal: " + data.msg);
                     location.reload();
@@ -199,18 +243,32 @@
             })
             .catch(err => {
                 console.error(err);
-                alert("Error upload.");
-                location.reload();
+                alert("Terjadi kesalahan koneksi.");
+                const btn = document.getElementById('btnUpload');
+                if(btn) {
+                    btn.innerHTML = 'Upload Video';
+                    btn.className = "btn btn-primary w-100";
+                    btn.disabled = false;
+                }
             });
         }
 
-        // --- UTILS ---
+        // 5. NAVIGASI SOAL & HALAMAN SELESAI
         function loadQuestion(idx) {
             document.getElementById('qIndex').innerText = idx + 1;
             document.getElementById('qText').innerText = questions[idx].text;
             document.getElementById('nextBtn').style.display = 'none';
             document.getElementById('recordBtn').style.display = 'block';
             document.getElementById('statusText').innerText = "Tap camera to record";
+            
+            // Reset UI Upload
+            document.getElementById('videoInput').value = "";
+            const btn = document.getElementById('btnUpload');
+            if(btn) {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i> Upload Video';
+                btn.className = "btn btn-primary w-100 fw-bold";
+                btn.disabled = false;
+            }
         }
 
         function nextQuestion() {
@@ -218,7 +276,14 @@
             if (currentIdx < questions.length) {
                 loadQuestion(currentIdx);
             } else {
-                document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:100px;'>Interview Selesai! Terima kasih.</h1>";
+                // --- TAMPILKAN LAYAR SELESAI ---
+                document.getElementById('mainArea').style.display = 'none';
+                document.getElementById('completionScreen').style.display = 'flex';
+                
+                // Matikan kamera
+                if(stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
             }
         }
 
@@ -234,8 +299,6 @@
                 document.querySelectorAll('.nav-link')[0].classList.remove('active');
                 document.querySelectorAll('.nav-link')[1].classList.add('active');
             }
-            
-            // UI Reset
             document.getElementById('statusText').innerText = "";
         }
 
