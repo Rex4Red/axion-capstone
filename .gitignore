@@ -1,0 +1,17 @@
+# --- .gitignore ---
+
+# 1. Folder Virtual Environment (Sangat Berat, Jangan Upload!)
+venv_flask/
+venv/
+env/
+
+# 2. File Rahasia (SANGAT PENTING: Jangan Upload API KEY!)
+.env
+
+# 3. File Sampah Python
+__pycache__/
+*.pyc
+
+# 4. Database Lokal (Opsional, karena kita pakai Neon)
+instance/
+*.sqlite3

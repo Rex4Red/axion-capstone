@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Daftar Kandidat - Axion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --palladian: #EEE9DF; --blue-fantastic: #2C3B4D; --truffle-trouble: #A35139;
+            --abyssal: #1B2632; --bg-dark: #05080f;
+        }
+        body { background: var(--bg-dark); font-family: 'Plus Jakarta Sans', sans-serif; color: white; padding: 40px; }
+        
+        .header-area { margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+        .back-link { color: #888; text-decoration: none; font-weight: 600; transition: 0.3s; }
+        .back-link:hover { color: var(--truffle-trouble); }
+
+        /* Card Style */
+        .candidate-card {
+            background: rgba(44, 59, 77, 0.4); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 20px; transition: 0.3s; display: flex; align-items: center; justify-content: space-between;
+        }
+        .candidate-card:hover { background: rgba(44, 59, 77, 0.7); transform: translateX(5px); border-color: var(--truffle-trouble); }
+
+        .avatar-initial {
+            width: 50px; height: 50px; background: var(--truffle-trouble); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.2rem; margin-right: 20px;
+        }
+
+        .btn-view {
+            background: var(--palladian); color: var(--abyssal); font-weight: 700;
+            padding: 8px 20px; border-radius: 50px; text-decoration: none; transition: 0.3s;
+        }
+        .btn-view:hover { background: white; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-area d-flex justify-content-between align-items-center">
+            <div>
+                <a href="/" class="back-link"><i class="fa-solid fa-arrow-left me-2"></i>Dashboard</a>
+                <h2 class="fw-bold mt-2">Pelamar: {{ job.title }}</h2>
+                <span class="badge bg-secondary">{{ job.level }}</span>
+            </div>
+            <div class="text-end text-muted">
+                <i class="fa-solid fa-users me-2"></i> {{ candidates|length }} Total Kandidat
+            </div>
+        </div>
+
+        <div class="row g-3">
+            {% for cand in candidates %}
+            <div class="col-12">
+                <div class="candidate-card">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-initial">{{ cand.name[0] }}</div>
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ cand.name }}</h5>
+                            <small class="text-muted"><i class="fa-solid fa-envelope me-1"></i> {{ cand.email }}</small>
+                            <span class="mx-2 text-muted">•</span>
+                            <small class="text-muted">{{ cand.interview_date.strftime('%d %b %Y, %H:%M') }}</small>
+                        </div>
+                    </div>
+                    <a href="/candidate/{{ cand.id }}/report" class="btn-view">
+                        Lihat Rapor <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5 opacity-50">
+                <i class="fa-solid fa-folder-open fa-3x mb-3"></i>
+                <p>Belum ada kandidat yang melamar.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

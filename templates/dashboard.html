@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard - Axion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --palladian: #EEE9DF; --oatmeal: #C9C1B1; --blue-fantastic: #2C3B4D;
+            --burning-flame: #FFB162; --truffle-trouble: #A35139; --abyssal: #1B2632;
+        }
+        
+        body { background-color: #f4f4f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Navbar */
+        .navbar-custom { background: var(--abyssal); padding: 15px 0; }
+        .brand-text { color: var(--palladian); font-weight: 800; font-size: 1.5rem; letter-spacing: -1px; }
+        
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--blue-fantastic) 0%, var(--abyssal) 100%);
+            color: white; padding: 60px 0; margin-bottom: 40px; border-radius: 0 0 30px 30px;
+        }
+        
+        /* Cards Lowongan */
+        .job-card {
+            background: white; border: 1px solid #e0e0e0; border-radius: 16px;
+            padding: 25px; transition: 0.3s; height: 100%; position: relative; overflow: hidden;
+        }
+        .job-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--truffle-trouble); }
+        .job-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%;
+            background: var(--oatmeal); transition: 0.3s;
+        }
+        .job-card:hover::before { background: var(--truffle-trouble); }
+        
+        .level-badge {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            padding: 5px 12px; border-radius: 20px; background: #f0f0f0; color: #666; display: inline-block; margin-bottom: 10px;
+        }
+        
+        .job-title { font-weight: 800; color: var(--abyssal); margin-bottom: 5px; }
+        .job-meta { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
+        
+        /* Tombol & Aksi */
+        .btn-create {
+            background: var(--truffle-trouble); color: white; border: none; font-weight: 700;
+            padding: 12px 30px; border-radius: 50px; transition: 0.3s;
+        }
+        .btn-create:hover { background: #8a432e; transform: translateY(-2px); color: white; }
+        
+        .btn-link-custom { text-decoration: none; color: var(--blue-fantastic); font-weight: 600; font-size: 0.9rem; }
+        .btn-link-custom:hover { color: var(--truffle-trouble); }
+
+        /* Modal Custom */
+        .modal-content { border-radius: 20px; border: none; }
+        .modal-header { border-bottom: none; padding: 30px 30px 10px; }
+        .modal-body { padding: 10px 30px 30px; }
+        .form-control, .form-select {
+            padding: 12px; border-radius: 10px; border: 2px solid #eee; background: #fafafa;
+        }
+        .form-control:focus { border-color: var(--truffle-trouble); box-shadow: none; background: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-custom">
+        <div class="container d-flex justify-content-between align-items-center">
+            <span class="brand-text"><i class="fa-solid fa-layer-group me-2"></i>Axion.</span>
+            <div class="text-white small">HR Admin Panel</div>
+        </div>
+    </nav>
+
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="fw-bold mb-3">Kelola Lowongan & Interview</h1>
+            <p class="opacity-75 mb-4">Buat lowongan baru dan biarkan AI men-generate pertanyaan interview secara otomatis.</p>
+            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createJobModal">
+                <i class="fa-solid fa-plus me-2"></i> Buat Lowongan Baru
+            </button>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} rounded-4 mb-4 border-0 shadow-sm">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+            {% for job in jobs %}
+            <div class="col-md-4">
+                <div class="job-card">
+                    <span class="level-badge">{{ job.level }}</span>
+                    <h4 class="job-title">{{ job.title }}</h4>
+                    <p class="job-meta">
+                        <i class="fa-solid fa-calendar-days me-1"></i> {{ job.created_at.strftime('%d %b %Y') }}
+                        <span class="mx-2">•</span>
+                        <i class="fa-solid fa-list-check me-1"></i> {{ job.questions|length }} Soal
+                    </p>
+                    
+                    <div class="d-flex gap-2 flex-wrap mb-3">
+                        {% for skill in job.skills.split(',') %}
+                            <span class="badge bg-light text-dark border">{{ skill.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr class="opacity-25 my-3">
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('job_candidates', job_id=job.id) }}" class="btn-link-custom">
+                            Lihat Kandidat <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
+    
+                        <a href="/delete-job/{{ job.id }}" class="text-danger small opacity-50 hover-opacity-100" onclick="return confirm('Hapus lowongan ini?')">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-50">
+                <h5 class="text-muted fw-bold">Belum ada lowongan aktif</h5>
+                <p class="small text-muted">Klik tombol di atas untuk membuat lowongan pertama.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="modal fade" id="createJobModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Buat Lowongan Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/create-job" method="POST">
+                    <div class="modal-body">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Judul Posisi</label>
+                                <input type="text" name="title" class="form-control" placeholder="Contoh: Senior Marketing" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Level</label>
+                                <select name="level" class="form-select">
+                                    <option>Junior</option>
+                                    <option>Middle</option>
+                                    <option>Senior</option>
+                                    <option>Manager</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="pills-ai-tab" data-bs-toggle="pill" data-bs-target="#pills-ai" type="button" role="tab">🤖 Generate by AI</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pills-manual-tab" data-bs-toggle="pill" data-bs-target="#pills-manual" type="button" role="tab">✍️ Buat Soal Manual</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="pills-tabContent">
+                            
+                            <div class="tab-pane fade show active" id="pills-ai" role="tabpanel">
+                                <div class="alert alert-info border-0 small">
+                                    <i class="fa-solid fa-robot me-1"></i> AI akan otomatis membuatkan 3 soal berdasarkan skill di bawah ini.
+                                </div>
+                                <label class="form-label fw-bold">Skill Wajib (Untuk Prompt AI)</label>
+                                <textarea name="skills" class="form-control" rows="3" placeholder="Contoh: Python, Flask, SQL, Komunikasi..."></textarea>
+                            </div>
+
+                            <div class="tab-pane fade" id="pills-manual" role="tabpanel">
+                                <div id="manual-questions-container">
+                                    <div class="card bg-light border-0 p-3 mb-3 question-item">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="fw-bold small text-muted">Pertanyaan 1</span>
+                                        </div>
+                                        <input type="text" name="manual_q[]" class="form-control mb-2" placeholder="Tulis pertanyaan di sini...">
+                                        <textarea name="manual_a[]" class="form-control" rows="2" placeholder="Poin kunci jawaban ideal..."></textarea>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100 border-dashed" onclick="addQuestionField()">
+                                    <i class="fa-solid fa-plus-circle me-1"></i> Tambah Pertanyaan Lagi
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-dark">Simpan Lowongan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let qCount = 1;
+        function addQuestionField() {
+            qCount++;
+            const container = document.getElementById('manual-questions-container');
+            const html = `
+                <div class="card bg-light border-0 p-3 mb-3 question-item">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-bold small text-muted">Pertanyaan ${qCount}</span>
+                        <button type="button" class="btn-close small" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                    <input type="text" name="manual_q[]" class="form-control mb-2" placeholder="Tulis pertanyaan di sini...">
+                    <textarea name="manual_a[]" class="form-control" rows="2" placeholder="Poin kunci jawaban ideal..."></textarea>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+    </script>
+</body>
+</html>

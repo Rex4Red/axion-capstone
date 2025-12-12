@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Room - Axion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --palladian: #EEE9DF;
+            --blue-fantastic: #2C3B4D;
+            --truffle-trouble: #A35139;
+            --abyssal: #1B2632;
+            --bg-dark: #05080f;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient Glow */
+        .glow {
+            position: fixed; width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(44, 59, 77, 0.4) 0%, transparent 70%);
+            filter: blur(80px); z-index: -1; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Card Container */
+        .welcome-card {
+            background: var(--palladian);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px;
+            padding: 40px;
+            color: var(--abyssal);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+            text-align: center;
+        }
+
+        /* Badge Posisi */
+        .job-badge {
+            background: rgba(163, 81, 57, 0.1);
+            color: var(--truffle-trouble);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 { font-weight: 800; margin-bottom: 10px; color: var(--abyssal); }
+        p.desc { color: #666; font-size: 0.95rem; margin-bottom: 30px; line-height: 1.6; }
+
+        /* Form Input */
+        .form-floating > .form-control {
+            border-radius: 12px; border: 2px solid #ddd; background: #fff;
+        }
+        .form-floating > .form-control:focus {
+            border-color: var(--truffle-trouble); box-shadow: none;
+        }
+        .form-floating > label { color: #888; }
+
+        /* Button */
+        .btn-start {
+            background-color: var(--truffle-trouble);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 20px;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+        .btn-start:hover {
+            background-color: #8a432e;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(163, 81, 57, 0.3);
+        }
+
+        .info-list {
+            text-align: left;
+            margin-bottom: 30px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+        .info-item {
+            display: flex; align-items: center; margin-bottom: 10px; font-size: 0.9rem; color: #555;
+        }
+        .info-item:last-child { margin-bottom: 0; }
+        .info-item i { width: 25px; color: var(--blue-fantastic); }
+
+    </style>
+</head>
+<body>
+
+    <div class="glow"></div>
+
+    <div class="welcome-card">
+        <div class="job-badge">Interview Invitation</div>
+        
+        <h1>{{ job.title }}</h1>
+        <p class="text-muted fw-bold mb-4">{{ job.level }} Level</p>
+
+        <p class="desc">
+            Halo! Anda diundang untuk mengikuti sesi interview otomatis berbasis AI.
+            Silakan lengkapi data diri untuk memulai.
+        </p>
+
+        <div class="info-list">
+            <div class="info-item"><i class="fa-solid fa-list-ol"></i> {{ job.questions|length }} Pertanyaan</div>
+            <div class="info-item"><i class="fa-solid fa-clock"></i> Estimasi Waktu: 10-15 Menit</div>
+            <div class="info-item"><i class="fa-solid fa-microphone"></i> Wajib menggunakan Mikrofon</div>
+        </div>
+
+        <form action="/start-interview/{{ job.id }}" method="POST">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="name" name="name" placeholder="Nama Lengkap" required>
+                <label for="name">Nama Lengkap</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" name="email" placeholder="Alamat Email" required>
+                <label for="email">Alamat Email</label>
+            </div>
+
+            <button type="submit" class="btn-start">
+                Mulai Sesi Interview <i class="fa-solid fa-arrow-right ms-2"></i>
+            </button>
+        </form>
+
+        <div class="mt-4 small text-muted">
+            Powered by <strong>Axion AI</strong>
+        </div>
+    </div>
+
+</body>
+</html>
