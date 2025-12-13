@@ -12,19 +12,29 @@ app = Flask(__name__)
 # Gunakan Secret Key dari .env (atau default untuk lokal)
 app.secret_key = os.getenv("SECRET_KEY", "rahasia_hrd_default_dev")
 
-# --- KONFIGURASI DATABASE (PERBAIKAN KEAMANAN) ---
+# --- KONFIGURASI DATABASE (PERBAIKAN DRIVER PG8000) ---
 # Jangan tulis link DB di sini! Ambil dari .env agar aman.
+# --- DB CONFIGURATION (FIXED FOR PG8000) ---
+# DB URI (Pastikan tetap menggunakan Link Neon Anda)
 DB_URI = os.getenv("DATABASE_URL")
 
+# Jika DB_URI None (misal test lokal tanpa .env), beri fallback string kosong atau error
 if not DB_URI:
-    raise ValueError("❌ Error: DATABASE_URL tidak ditemukan di file .env!")
+    # Fallback string (opsional, sesuaikan dengan link neon anda jika hardcode)
+    DB_URI = "postgresql://neondb_owner:npg_2LkDPfsu7vKy@ep-crimson-breeze-ahdy5lee-pooler.c-3.us-east-1.aws.neon.tech/neondb" 
 
-# Fix untuk Neon/Render yang kadang pakai postgres:// (SQLAlchemy butuh postgresql://)
+# 1. Ganti Driver ke pg8000
 if DB_URI.startswith("postgres://"):
-    DB_URI = DB_URI.replace("postgres://", "postgresql://", 1)
+    DB_URI = DB_URI.replace("postgres://", "postgresql+pg8000://", 1)
+elif DB_URI.startswith("postgresql://"):
+    DB_URI = DB_URI.replace("postgresql://", "postgresql+pg8000://", 1)
+
+# 2. HAPUS PARAMETER SSL (PENTING!)
+# pg8000 akan crash jika ada '?sslmode=...', jadi kita hapus semua query params
+if "?" in DB_URI:
+    DB_URI = DB_URI.split("?")[0]
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
@@ -94,8 +104,29 @@ def generate_questions_from_ai(title, level, skills):
 @app.route('/')
 def dashboard():
     jobs = Job.query.order_by(Job.created_at.desc()).all()
-    # Kirim URL kandidat ke template agar tombol 'Lihat Kandidat' mengarah ke Hugging Face
-    return render_template('dashboard.html', jobs=jobs, candidate_url=CANDIDATE_SITE_URL)
+    
+    # 1. Hitung Total Kandidat
+    total_candidates = Candidate.query.count()
+
+    # 2. Hitung Top Talents (Logika: Rata-rata Nilai > 75)
+    candidates = Candidate.query.all()
+    top_talent_count = 0
+    
+    for cand in candidates:
+        responses = Response.query.filter_by(candidate_id=cand.id).all()
+        if responses:
+            # Hitung rata-rata skor kandidat ini
+            avg_score = sum([r.score_relevance for r in responses]) / len(responses)
+            if avg_score > 75: # Ambang batas "Pintar"
+                top_talent_count += 1
+    
+    return render_template(
+        'dashboard.html', 
+        jobs=jobs, 
+        candidate_url=CANDIDATE_SITE_URL,
+        total_candidates=total_candidates,
+        top_talent_count=top_talent_count  # <-- Kirim data baru ini
+    )
 
 @app.route('/create-job', methods=['POST'])
 def create_job():

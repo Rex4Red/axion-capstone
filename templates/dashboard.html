@@ -3,204 +3,444 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Dashboard - Axion</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>HR Console | Axion.</title>
     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --palladian: #EEE9DF; --oatmeal: #C9C1B1; --blue-fantastic: #2C3B4D;
-            --burning-flame: #FFB162; --truffle-trouble: #A35139; --abyssal: #1B2632;
+            --sidebar-width: 260px;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+            --text-main: #ffffff;      /* Pure White */
+            --text-muted: #cbd5e1;     /* Light Gray (Readable) */
+            --card-glass: rgba(30, 41, 59, 0.7);
+            --border-glass: rgba(255, 255, 255, 0.15);
         }
-        
-        body { background-color: #f4f4f9; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        /* Navbar */
-        .navbar-custom { background: var(--abyssal); padding: 15px 0; }
-        .brand-text { color: var(--palladian); font-weight: 800; font-size: 1.5rem; letter-spacing: -1px; }
-        
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(135deg, var(--blue-fantastic) 0%, var(--abyssal) 100%);
-            color: white; padding: 60px 0; margin-bottom: 40px; border-radius: 0 0 30px 30px;
-        }
-        
-        /* Cards Lowongan */
-        .job-card {
-            background: white; border: 1px solid #e0e0e0; border-radius: 16px;
-            padding: 25px; transition: 0.3s; height: 100%; position: relative; overflow: hidden;
-        }
-        .job-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); border-color: var(--truffle-trouble); }
-        .job-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%;
-            background: var(--oatmeal); transition: 0.3s;
-        }
-        .job-card:hover::before { background: var(--truffle-trouble); }
-        
-        .level-badge {
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-            padding: 5px 12px; border-radius: 20px; background: #f0f0f0; color: #666; display: inline-block; margin-bottom: 10px;
-        }
-        
-        .job-title { font-weight: 800; color: var(--abyssal); margin-bottom: 5px; }
-        .job-meta { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
-        
-        /* Tombol & Aksi */
-        .btn-create {
-            background: var(--truffle-trouble); color: white; border: none; font-weight: 700;
-            padding: 12px 30px; border-radius: 50px; transition: 0.3s;
-        }
-        .btn-create:hover { background: #8a432e; transform: translateY(-2px); color: white; }
-        
-        .btn-link-custom { text-decoration: none; color: var(--blue-fantastic); font-weight: 600; font-size: 0.9rem; }
-        .btn-link-custom:hover { color: var(--truffle-trouble); }
 
-        /* Modal Custom */
-        .modal-content { border-radius: 20px; border: none; }
-        .modal-header { border-bottom: none; padding: 30px 30px 10px; }
-        .modal-body { padding: 10px 30px 30px; }
-        .form-control, .form-select {
-            padding: 12px; border-radius: 10px; border: 2px solid #eee; background: #fafafa;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-darker);
+            /* Deep Dark Gradient Background */
+            background-image: radial-gradient(at 0% 0%, #1e293b 0px, transparent 50%), 
+                              radial-gradient(at 100% 0%, #0f172a 0px, transparent 50%);
+            color: var(--text-main);
+            overflow-x: hidden;
         }
-        .form-control:focus { border-color: var(--truffle-trouble); box-shadow: none; background: white; }
+
+        /* --- GLOBAL TEXT OVERRIDES (NO BLACK TEXT) --- */
+        h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+            color: var(--text-main) !important;
+        }
+        p, span, div, label, li {
+            color: var(--text-main);
+        }
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+        .text-secondary {
+            color: var(--text-muted) !important;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: rgba(2, 6, 23, 0.95);
+            border-right: 1px solid var(--border-glass);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 3rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand span { color: var(--accent); }
+
+        .nav-item {
+            color: var(--text-muted) !important; /* Force Light Color */
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--accent) !important;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+        .nav-item i { width: 20px; text-align: center; }
+
+        .user-profile {
+            margin-top: auto;
+            border-top: 1px solid var(--border-glass);
+            padding-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), #c2410c);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: white;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2.5rem 3rem;
+        }
+
+        /* --- STATS CARDS --- */
+        .stat-card {
+            background: rgba(30, 41, 59, 0.4); /* Darker glass */
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            backdrop-filter: blur(5px);
+        }
+        .stat-icon {
+            width: 50px; height: 50px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            color: var(--accent);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* --- JOB CARDS --- */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            margin-top: 3rem;
+        }
+
+        .job-card {
+            background: var(--card-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            height: 100%;
+            display: flex; flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        .job-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(249, 115, 22, 0.5);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
+            background: rgba(30, 41, 59, 0.85);
+        }
+        
+        .job-card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-glass);
+            background: rgba(0,0,0,0.2);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .badge-level {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 5px 12px; border-radius: 20px;
+            /* High Contrast Badge */
+            background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .job-card-body {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Custom Buttons High Visibility */
+        .btn-action {
+            width: 100%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-glass);
+            color: white !important;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: 0.2s;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        .btn-action:hover {
+            background: var(--accent);
+            color: white !important;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
+        }
+        .btn-action.secondary:hover {
+            background: white;
+            color: black !important; /* Inverted for contrast */
+        }
+
+        /* --- MODAL & FORM FIXES (CRITICAL FOR VISIBILITY) --- */
+        .modal-content {
+            background-color: #1e293b; /* Dark Navy Background */
+            color: white;
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .modal-header, .modal-footer {
+            border-color: var(--border-glass);
+        }
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%); /* White X icon */
+        }
+        
+        /* FORM INPUTS - FORCE WHITE TEXT */
+        .form-control, .form-select {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            border: 1px solid #475569 !important;
+            color: white !important; /* Ensure input text is white */
+            padding: 0.75rem;
+        }
+        .form-control::placeholder {
+            color: #94a3b8 !important; /* Light Gray Placeholder */
+            opacity: 1;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(15, 23, 42, 0.9) !important;
+            color: white !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+        }
+
+        /* TOGGLE SWITCH FIX */
+        .form-check-input {
+            background-color: #475569;
+            border-color: #64748b;
+        }
+        .form-check-input:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-custom">
-        <div class="container d-flex justify-content-between align-items-center">
-            <span class="brand-text"><i class="fa-solid fa-layer-group me-2"></i>Axion.</span>
-            <div class="text-white small">HR Admin Panel</div>
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-layer-group"></i> Axion<span>.</span>
         </div>
-    </nav>
+        
+        <nav class="nav flex-column">
+            <a href="#" class="nav-item active">
+                <i class="fa-solid fa-grid-2"></i> Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-users"></i> Kandidat
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-chart-pie"></i> Analytics
+            </a>
+        </nav>
 
-    <div class="hero-section text-center">
-        <div class="container">
-            <h1 class="fw-bold mb-3">Kelola Lowongan & Interview</h1>
-            <p class="opacity-75 mb-4">Buat lowongan baru dan biarkan AI men-generate pertanyaan interview secara otomatis.</p>
-            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createJobModal">
-                <i class="fa-solid fa-plus me-2"></i> Buat Lowongan Baru
-            </button>
+        <div class="user-profile">
+            <div class="avatar">HR</div>
+            <div style="font-size: 0.9rem;">
+                <div class="fw-bold text-white">Admin Recruiter</div>
+                <div class="text-muted" style="font-size: 0.8rem;">admin@axion.com</div>
+            </div>
         </div>
-    </div>
+    </aside>
 
-    <div class="container pb-5">
+    <main class="main-content">
         
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }} rounded-4 mb-4 border-0 shadow-sm">{{ message }}</div>
+              <div class="alert alert-dismissible fade show mb-4 shadow-sm" role="alert" 
+                   style="background: rgba(20, 83, 45, 0.4); border: 1px solid #4ade80; color: #dcfce7;">
+                <i class="fa-solid fa-circle-check me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
             {% endfor %}
           {% endif %}
         {% endwith %}
 
-        <div class="row g-4">
-            {% for job in jobs %}
+        <div class="row g-4 mb-5">
             <div class="col-md-4">
-                <div class="job-card">
-                    <span class="level-badge">{{ job.level }}</span>
-                    <h4 class="job-title">{{ job.title }}</h4>
-                    <p class="job-meta">
-                        <i class="fa-solid fa-calendar-days me-1"></i> {{ job.created_at.strftime('%d %b %Y') }}
-                        <span class="mx-2">•</span>
-                        <i class="fa-solid fa-list-check me-1"></i> {{ job.questions|length }} Soal
-                    </p>
-                    
-                    <div class="d-flex gap-2 flex-wrap mb-3">
-                        {% for skill in job.skills.split(',') %}
-                            <span class="badge bg-light text-dark border">{{ skill.strip() }}</span>
-                        {% endfor %}
-                    </div>
-                    
-                    <hr class="opacity-25 my-3">
-                    
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('job_candidates', job_id=job.id) }}" class="btn-link-custom">
-                            Lihat Kandidat <i class="fa-solid fa-arrow-right ms-1"></i>
-                        </a>
-    
-                        <a href="/delete-job/{{ job.id }}" class="text-danger small opacity-50 hover-opacity-100" onclick="return confirm('Hapus lowongan ini?')">
-                            <i class="fa-solid fa-trash"></i>
-                        </a>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold" style="letter-spacing: 1px;">Lowongan Aktif</div>
+                        <div class="fs-3 fw-bold text-white">{{ jobs|length }} Posisi</div>
                     </div>
                 </div>
             </div>
-            {% else %}
-            <div class="col-12 text-center py-5">
-                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="100" class="mb-3 opacity-50">
-                <h5 class="text-muted fw-bold">Belum ada lowongan aktif</h5>
-                <p class="small text-muted">Klik tombol di atas untuk membuat lowongan pertama.</p>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold" style="letter-spacing: 1px;">Total Kandidat</div>
+                        <div class="fs-3 fw-bold text-white">{{ total_candidates }} Orang</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold" style="letter-spacing: 1px;">Top Talents</div>
+                        <div class="fs-3 fw-bold text-white">{{ top_talent_count }} Orang</div>
+                        <div class="small text-success" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-arrow-trend-up me-1"></i>Avg Score > 75
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div>
+                <h2 class="fw-bold mb-1 text-white">Daftar Lowongan</h2>
+                <p class="text-muted mb-0">Kelola pertanyaan interview dan pantau kandidat.</p>
+            </div>
+            <button class="btn btn-lg fw-bold text-white shadow-lg" 
+                    style="background: var(--accent); border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 0.95rem; border: none;"
+                    data-bs-toggle="modal" data-bs-target="#createJobModal">
+                <i class="fa-solid fa-plus me-2"></i> Buat Lowongan
+            </button>
+        </div>
+
+        {% if jobs %}
+        <div class="row g-4">
+            {% for job in jobs %}
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <span class="badge-level">{{ job.level }}</span>
+                        <a href="{{ url_for('delete_job', id=job.id) }}" onclick="return confirm('Hapus lowongan ini?')" 
+                           class="text-muted" style="transition:0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'" title="Hapus">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                    </div>
+                    <div class="job-card-body">
+                        <h5 class="fw-bold mb-2 text-white">{{ job.title }}</h5>
+                        <div class="text-muted small mb-4">
+                            <i class="fa-regular fa-clock me-1"></i> {{ job.created_at.strftime('%d %b %Y') }}
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-2 mb-4 p-2 rounded" style="background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.2);">
+                            <i class="fa-solid fa-bolt text-warning"></i>
+                            <span class="small text-white" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ job.skills }}</span>
+                        </div>
+
+                        <div class="mt-auto">
+                            <a href="{{ url_for('job_candidates', job_id=job.id) }}" class="btn-action">
+                                Lihat Kandidat
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
             {% endfor %}
         </div>
-    </div>
+        {% else %}
+        <div class="text-center py-5 rounded-4" style="border: 2px dashed var(--border-glass); background: rgba(255,255,255,0.02);">
+            <div class="mb-3 opacity-50 text-secondary"><i class="fa-solid fa-clipboard-list fa-4x"></i></div>
+            <h4 class="fw-bold text-white">Belum ada Lowongan</h4>
+            <p class="text-muted">Buat lowongan pertama Anda untuk mulai merekrut.</p>
+        </div>
+        {% endif %}
+
+    </main>
 
     <div class="modal fade" id="createJobModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Buat Lowongan Baru</h5>
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold text-white">Setup Interview Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="/create-job" method="POST">
-                    <div class="modal-body">
-                        <div class="row g-3 mb-4">
+                <form action="{{ url_for('create_job') }}" method="POST">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
                             <div class="col-md-8">
-                                <label class="form-label fw-bold">Judul Posisi</label>
-                                <input type="text" name="title" class="form-control" placeholder="Contoh: Senior Marketing" required>
+                                <label class="form-label text-muted small fw-bold text-uppercase">Judul Posisi</label>
+                                <input type="text" name="title" class="form-control" placeholder="Misal: Product Manager" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">Level</label>
+                                <label class="form-label text-muted small fw-bold text-uppercase">Level</label>
                                 <select name="level" class="form-select">
-                                    <option>Junior</option>
-                                    <option>Middle</option>
-                                    <option>Senior</option>
-                                    <option>Manager</option>
+                                    <option value="Junior">Junior</option>
+                                    <option value="Middle">Middle</option>
+                                    <option value="Senior">Senior</option>
+                                    <option value="Internship">Internship</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="pills-ai-tab" data-bs-toggle="pill" data-bs-target="#pills-ai" type="button" role="tab">🤖 Generate by AI</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="pills-manual-tab" data-bs-toggle="pill" data-bs-target="#pills-manual" type="button" role="tab">✍️ Buat Soal Manual</button>
-                            </li>
-                        </ul>
-
-                        <div class="tab-content" id="pills-tabContent">
-                            
-                            <div class="tab-pane fade show active" id="pills-ai" role="tabpanel">
-                                <div class="alert alert-info border-0 small">
-                                    <i class="fa-solid fa-robot me-1"></i> AI akan otomatis membuatkan 3 soal berdasarkan skill di bawah ini.
-                                </div>
-                                <label class="form-label fw-bold">Skill Wajib (Untuk Prompt AI)</label>
-                                <textarea name="skills" class="form-control" rows="3" placeholder="Contoh: Python, Flask, SQL, Komunikasi..."></textarea>
+                            <div class="col-12">
+                                <label class="form-label text-muted small fw-bold text-uppercase">Skills (Untuk AI)</label>
+                                <textarea name="skills" class="form-control" rows="3" placeholder="Sebutkan skill teknis & soft skill..." required></textarea>
                             </div>
 
-                            <div class="tab-pane fade" id="pills-manual" role="tabpanel">
-                                <div id="manual-questions-container">
-                                    <div class="card bg-light border-0 p-3 mb-3 question-item">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="fw-bold small text-muted">Pertanyaan 1</span>
-                                        </div>
-                                        <input type="text" name="manual_q[]" class="form-control mb-2" placeholder="Tulis pertanyaan di sini...">
-                                        <textarea name="manual_a[]" class="form-control" rows="2" placeholder="Poin kunci jawaban ideal..."></textarea>
+                            <div class="col-12 mt-3">
+                                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);">
+                                    <div>
+                                        <span class="fw-bold d-block text-white">Input Pertanyaan Manual</span>
+                                        <small class="text-muted">Matikan AI, saya buat soal sendiri.</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="toggleManual" style="transform: scale(1.3);">
                                     </div>
                                 </div>
-                                
-                                <button type="button" class="btn btn-outline-primary btn-sm w-100 border-dashed" onclick="addQuestionField()">
-                                    <i class="fa-solid fa-plus-circle me-1"></i> Tambah Pertanyaan Lagi
-                                </button>
                             </div>
 
+                            <div id="manualInputSection" class="d-none mt-3">
+                                <div class="row g-2">
+                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control form-control-sm" placeholder="Pertanyaan 1"></div>
+                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control form-control-sm" placeholder="Kunci Jawaban 1"></div>
+                                    
+                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control form-control-sm" placeholder="Pertanyaan 2"></div>
+                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control form-control-sm" placeholder="Kunci Jawaban 2"></div>
+                                    
+                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control form-control-sm" placeholder="Pertanyaan 3"></div>
+                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control form-control-sm" placeholder="Kunci Jawaban 3"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-dark">Simpan Lowongan</button>
+                    <div class="modal-footer border-top border-secondary border-opacity-25">
+                        <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn text-white fw-bold px-4" style="background: var(--accent);">Simpan</button>
                     </div>
                 </form>
             </div>
@@ -208,23 +448,19 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        let qCount = 1;
-        function addQuestionField() {
-            qCount++;
-            const container = document.getElementById('manual-questions-container');
-            const html = `
-                <div class="card bg-light border-0 p-3 mb-3 question-item">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="fw-bold small text-muted">Pertanyaan ${qCount}</span>
-                        <button type="button" class="btn-close small" onclick="this.parentElement.parentElement.remove()"></button>
-                    </div>
-                    <input type="text" name="manual_q[]" class="form-control mb-2" placeholder="Tulis pertanyaan di sini...">
-                    <textarea name="manual_a[]" class="form-control" rows="2" placeholder="Poin kunci jawaban ideal..."></textarea>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
+        // Toggle Logic
+        const toggle = document.getElementById('toggleManual');
+        const section = document.getElementById('manualInputSection');
+        toggle.addEventListener('change', function() {
+            section.classList.toggle('d-none', !this.checked);
+        });
+
+        // Copy Link Logic
+        function copyLink(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Link berhasil disalin!"); 
+            });
         }
     </script>
 </body>
