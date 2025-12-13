@@ -322,13 +322,13 @@
 
     <aside class="sidebar">
         <div class="logo">
-            <i class="fa-solid fa-layer-group" style="color: var(--truffle-trouble);"></i>
-            Axion<span>.</span>
+            <img src="{{ url_for('static', filename='AxionLogo.png') }}" alt="Logo Axion" style="height: 40px; width: auto;"> 
+            Axion<span>HRD</span>
         </div>
         
         <ul class="nav-links">
             <li><a href="#" class="active"><i class="fa-solid fa-table-columns"></i> Dashboard</a></li>
-            <li><a href="#"><i class="fa-solid fa-users"></i> Kandidat</a></li>
+            <li><a href="{{ url_for('all_candidates') }}"> <i class="fa-solid fa-users"></i> Kandidat</a></li>
             <li><a href="#"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
         </ul>
 

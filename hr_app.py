@@ -217,5 +217,13 @@ def delete_job(id):
         flash(f'Gagal menghapus: {str(e)}', 'danger')
     return redirect(url_for('dashboard'))
 
+@app.route('/candidates')
+def all_candidates():
+    # Mengambil semua kandidat dan mengurutkan dari yang terbaru
+    # Kita join dengan Job agar bisa menampilkan melamar di posisi apa
+    candidates = db.session.query(Candidate, Job).join(Job, Candidate.job_id == Job.id).order_by(Candidate.id.desc()).all()
+    
+    return render_template('all_candidates.html', candidates=candidates)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
