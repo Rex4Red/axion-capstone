@@ -5,279 +5,338 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HR Console | Axion.</title>
     
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <style>
+        /* --- 1. THEME VARIABLES --- */
         :root {
+            --palladian: #EEE9DF;       /* Teks Utama */
+            --truffle-trouble: #A35139; /* Aksen Utama (Orange/Rust) */
+            --truffle-hover: #c25e42;
+            --abyssal: #1B2632;         /* Sidebar BG & Modal Base */
+            --bg-dark: #05080f;         /* Background Utama (Deep Black) */
+            --text-muted: #9ca3af;
             --sidebar-width: 260px;
-            --bg-dark: #0f172a;
-            --bg-darker: #020617;
-            --accent: #f97316;
-            --accent-hover: #ea580c;
-            --text-main: #ffffff;      /* Pure White */
-            --text-muted: #cbd5e1;     /* Light Gray (Readable) */
-            --card-glass: rgba(30, 41, 59, 0.7);
-            --border-glass: rgba(255, 255, 255, 0.15);
         }
 
+        /* Reset & Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-darker);
-            /* Deep Dark Gradient Background */
-            background-image: radial-gradient(at 0% 0%, #1e293b 0px, transparent 50%), 
-                              radial-gradient(at 100% 0%, #0f172a 0px, transparent 50%);
-            color: var(--text-main);
+            background-color: var(--bg-dark);
+            color: var(--palladian);
+            display: flex;
+            min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
         }
 
-        /* --- GLOBAL TEXT OVERRIDES (NO BLACK TEXT) --- */
-        h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-            color: var(--text-main) !important;
-        }
-        p, span, div, label, li {
-            color: var(--text-main);
-        }
-        .text-muted {
-            color: var(--text-muted) !important;
-        }
-        .text-secondary {
-            color: var(--text-muted) !important;
+        /* --- REVERTED BACKGROUND GLOW (MATCHING PREVIOUS DESIGN) --- */
+        .glow-bg {
+            position: fixed; width: 80vw; height: 80vw;
+            /* Kembali ke cahaya biru di tengah */
+            background: radial-gradient(circle, rgba(44, 59, 77, 0.3) 0%, transparent 70%);
+            filter: blur(100px); z-index: -1; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
         }
 
-        /* --- SIDEBAR --- */
+        h1, h2, h3, h4, h5, h6 { color: var(--palladian); font-weight: 700; }
+        a { text-decoration: none; }
+
+        /* --- 2. SIDEBAR --- */
         .sidebar {
             width: var(--sidebar-width);
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: rgba(2, 6, 23, 0.95);
-            border-right: 1px solid var(--border-glass);
-            padding: 2rem 1.5rem;
+            background-color: var(--abyssal);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            padding: 30px 24px;
             z-index: 1000;
         }
 
-        .brand {
-            font-size: 1.5rem;
+        .logo {
+            font-size: 24px;
             font-weight: 800;
-            color: white;
-            margin-bottom: 3rem;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 50px;
+            color: var(--palladian);
+            display: flex; align-items: center; gap: 12px;
         }
-        .brand span { color: var(--accent); }
+        .logo span { color: var(--truffle-trouble); }
 
-        .nav-item {
-            color: var(--text-muted) !important; /* Force Light Color */
-            padding: 0.85rem 1rem;
-            border-radius: 8px;
+        .nav-links { list-style: none; flex: 1; padding-left: 0; }
+        .nav-links li { margin-bottom: 8px; }
+
+        .nav-links a {
+            display: flex; align-items: center; gap: 14px;
             text-decoration: none;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
+            color: var(--text-muted);
+            padding: 14px 16px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
         }
-        .nav-item:hover, .nav-item.active {
-            background: rgba(249, 115, 22, 0.15);
-            color: var(--accent) !important;
-            border: 1px solid rgba(249, 115, 22, 0.2);
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: rgba(163, 81, 57, 0.1);
+            color: var(--truffle-trouble);
         }
-        .nav-item i { width: 20px; text-align: center; }
 
         .user-profile {
-            margin-top: auto;
-            border-top: 1px solid var(--border-glass);
-            padding-top: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .avatar {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--accent), #c2410c);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: white;
-            box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+            display: flex; align-items: center; gap: 12px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* --- MAIN CONTENT --- */
+        .avatar {
+            width: 42px; height: 42px;
+            background-color: var(--truffle-trouble);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 800;
+        }
+
+        .user-info h4 { font-size: 14px; margin: 0; }
+        .user-info p { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+        /* --- 3. MAIN CONTENT --- */
         .main-content {
             margin-left: var(--sidebar-width);
-            padding: 2.5rem 3rem;
+            flex: 1;
+            padding: 40px 50px;
+            width: calc(100% - var(--sidebar-width));
         }
 
-        /* --- STATS CARDS --- */
-        .stat-card {
-            background: rgba(30, 41, 59, 0.4); /* Darker glass */
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            backdrop-filter: blur(5px);
+        /* --- STATS GRID --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 50px;
         }
+
+        /* CARD STYLE: DARK GLASS GRADIENT (KEPT AS REQUESTED) */
+        .stat-card {
+            background: linear-gradient(180deg, rgba(27, 38, 50, 0.9) 0%, rgba(27, 38, 50, 0.6) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex; flex-direction: column; justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); border-color: rgba(163, 81, 57, 0.3); }
+
+        .stat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        
         .stat-icon {
-            width: 50px; height: 50px;
-            background: rgba(255,255,255,0.08);
+            width: 44px; height: 44px;
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem;
-            color: var(--accent);
+            color: var(--truffle-trouble); font-size: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            color: var(--text-muted); letter-spacing: 0.5px;
+        }
+
+        .stat-value { font-size: 32px; font-weight: 800; color: var(--palladian); }
+
+        .stat-sub {
+            font-size: 13px; color: #4ADE80; margin-top: 8px;
+            display: flex; align-items: center; gap: 6px; font-weight: 600;
+        }
+
+        /* --- HEADER & ACTION --- */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .section-title h2 { font-size: 24px; margin-bottom: 8px; }
+        .section-title p { color: var(--text-muted); font-size: 14px; margin: 0; }
+
+        .btn-create {
+            background-color: var(--truffle-trouble);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(163, 81, 57, 0.3);
+        }
+        .btn-create:hover { 
+            background-color: var(--truffle-hover); 
+            transform: translateY(-2px);
+        }
+
+        /* --- JOB CARDS GRID --- */
+        .jobs-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        /* CARD STYLE: DARK GLASS GRADIENT (KEPT AS REQUESTED) */
+        .job-card-container {
+            background: linear-gradient(180deg, rgba(27, 38, 50, 0.9) 0%, rgba(27, 38, 50, 0.5) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            display: flex; flex-direction: column;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .job-card-container:hover {
+            transform: translateY(-5px);
+            border-color: var(--truffle-trouble);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        /* Badge Style */
+        .badge-level {
+            background: rgba(163, 81, 57, 0.15);
+            color: var(--truffle-trouble);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            border: 1px solid rgba(163, 81, 57, 0.2);
+        }
+        /* Variations */
+        .badge-Senior { color: #C084FC; background: rgba(192, 132, 252, 0.1); border-color: rgba(192, 132, 252, 0.2); }
+        .badge-Middle { color: #4ADE80; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.2); }
+
+        .btn-delete {
+            background: rgba(255,255,255,0.05); 
+            border: none; color: var(--text-muted);
+            width: 32px; height: 32px; border-radius: 8px;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-delete:hover { background: rgba(255, 0, 0, 0.1); color: #ff6b6b; }
+
+        .job-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--palladian); }
+
+        .job-date {
+            font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .info-bar {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--palladian);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 24px;
+            flex-grow: 1;
             border: 1px solid rgba(255,255,255,0.05);
         }
-
-        /* --- JOB CARDS --- */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            margin-top: 3rem;
+        .info-bar i { color: var(--truffle-trouble); }
+        
+        .info-text {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
         }
 
-        .job-card {
-            background: var(--card-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 0;
-            transition: all 0.3s ease;
-            overflow: hidden;
-            height: 100%;
-            display: flex; flex-direction: column;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-        }
-        .job-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(249, 115, 22, 0.5);
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
-            background: rgba(30, 41, 59, 0.85);
-        }
-        
-        .job-card-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border-glass);
-            background: rgba(0,0,0,0.2);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        
-        .badge-level {
-            font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-            padding: 5px 12px; border-radius: 20px;
-            /* High Contrast Badge */
-            background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3);
-        }
-
-        .job-card-body {
-            padding: 1.5rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Custom Buttons High Visibility */
-        .btn-action {
+        .btn-view {
             width: 100%;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid var(--border-glass);
-            color: white !important;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: 0.2s;
-            margin-bottom: 0.5rem;
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--palladian);
+            padding: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
             text-align: center;
-            text-decoration: none;
-            display: block;
+            font-weight: 600;
         }
-        .btn-action:hover {
-            background: var(--accent);
-            color: white !important;
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(249, 115, 22, 0.4);
-        }
-        .btn-action.secondary:hover {
-            background: white;
-            color: black !important; /* Inverted for contrast */
+        .btn-view:hover {
+            border-color: var(--truffle-trouble);
+            color: var(--truffle-trouble);
+            background: rgba(163, 81, 57, 0.05);
         }
 
-        /* --- MODAL & FORM FIXES (CRITICAL FOR VISIBILITY) --- */
+        /* --- MODAL STYLING --- */
         .modal-content {
-            background-color: #1e293b; /* Dark Navy Background */
-            color: white;
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background-color: var(--abyssal);
+            color: var(--palladian);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
-        .modal-header, .modal-footer {
-            border-color: var(--border-glass);
-        }
-        .btn-close {
-            filter: invert(1) grayscale(100%) brightness(200%); /* White X icon */
-        }
+        .modal-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; }
+        .modal-body { padding: 30px; }
+        .modal-footer { border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; }
+        .btn-close { filter: invert(1); opacity: 0.7; }
         
-        /* FORM INPUTS - FORCE WHITE TEXT */
         .form-control, .form-select {
-            background-color: rgba(15, 23, 42, 0.6) !important;
-            border: 1px solid #475569 !important;
-            color: white !important; /* Ensure input text is white */
-            padding: 0.75rem;
+            background-color: rgba(0, 0, 0, 0.3) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: var(--palladian) !important;
+            border-radius: 12px;
+            padding: 12px;
         }
-        .form-control::placeholder {
-            color: #94a3b8 !important; /* Light Gray Placeholder */
-            opacity: 1;
-        }
+        .form-control::placeholder { color: var(--text-muted); opacity: 0.5; }
         .form-control:focus, .form-select:focus {
-            background-color: rgba(15, 23, 42, 0.9) !important;
-            color: white !important;
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+            box-shadow: none;
+            border-color: var(--truffle-trouble) !important;
         }
+        .form-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; }
+        
+        /* Toggle Switch */
+        .form-check-input { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        .form-check-input:checked { background-color: var(--truffle-trouble); border-color: var(--truffle-trouble); }
 
-        /* TOGGLE SWITCH FIX */
-        .form-check-input {
-            background-color: #475569;
-            border-color: #64748b;
-        }
-        .form-check-input:checked {
-            background-color: var(--accent);
-            border-color: var(--accent);
+        /* Alert Styling */
+        .alert-custom {
+            background: rgba(74, 222, 128, 0.1); border: 1px solid #4ade80; color: #86efac; border-radius: 12px;
         }
     </style>
 </head>
 <body>
 
+    <div class="glow-bg"></div>
+
     <aside class="sidebar">
-        <div class="brand">
-            <i class="fa-solid fa-layer-group"></i> Axion<span>.</span>
+        <div class="logo">
+            <i class="fa-solid fa-layer-group" style="color: var(--truffle-trouble);"></i>
+            Axion<span>.</span>
         </div>
         
-        <nav class="nav flex-column">
-            <a href="#" class="nav-item active">
-                <i class="fa-solid fa-grid-2"></i> Dashboard
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fa-solid fa-users"></i> Kandidat
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fa-solid fa-chart-pie"></i> Analytics
-            </a>
-        </nav>
+        <ul class="nav-links">
+            <li><a href="#" class="active"><i class="fa-solid fa-table-columns"></i> Dashboard</a></li>
+            <li><a href="#"><i class="fa-solid fa-users"></i> Kandidat</a></li>
+            <li><a href="#"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
+        </ul>
 
         <div class="user-profile">
             <div class="avatar">HR</div>
-            <div style="font-size: 0.9rem;">
-                <div class="fw-bold text-white">Admin Recruiter</div>
-                <div class="text-muted" style="font-size: 0.8rem;">admin@axion.com</div>
+            <div class="user-info">
+                <h4>Admin Recruiter</h4>
+                <p>admin@axion.com</p>
             </div>
         </div>
     </aside>
@@ -287,8 +346,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-dismissible fade show mb-4 shadow-sm" role="alert" 
-                   style="background: rgba(20, 83, 45, 0.4); border: 1px solid #4ade80; color: #dcfce7;">
+              <div class="alert alert-dismissible fade show mb-4 shadow-sm alert-custom" role="alert">
                 <i class="fa-solid fa-circle-check me-2"></i> {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
               </div>
@@ -296,89 +354,75 @@
           {% endif %}
         {% endwith %}
 
-        <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="stat-card">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
                     <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
-                    <div>
-                        <div class="text-muted small text-uppercase fw-bold" style="letter-spacing: 1px;">Lowongan Aktif</div>
-                        <div class="fs-3 fw-bold text-white">{{ jobs|length }} Posisi</div>
-                    </div>
+                    <span class="stat-title">Lowongan Aktif</span>
                 </div>
+                <div class="stat-value">{{ jobs|length }} Posisi</div>
             </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
-                    <div>
-                        <div class="text-muted small text-uppercase fw-bold" style="letter-spacing: 1px;">Total Kandidat</div>
-                        <div class="fs-3 fw-bold text-white">{{ total_candidates }} Orang</div>
-                    </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon"><i class="fa-solid fa-user-group"></i></div>
+                    <span class="stat-title">Total Kandidat</span>
                 </div>
+                <div class="stat-value">{{ total_candidates }} Orang</div>
             </div>
-            <div class="col-md-4">
-                <div class="stat-card">
+
+            <div class="stat-card">
+                <div class="stat-header">
                     <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
-                    <div>
-                        <div class="text-muted small text-uppercase fw-bold" style="letter-spacing: 1px;">Top Talents</div>
-                        <div class="fs-3 fw-bold text-white">{{ top_talent_count }} Orang</div>
-                        <div class="small text-success" style="font-size: 0.75rem;">
-                            <i class="fa-solid fa-arrow-trend-up me-1"></i>Avg Score > 75
-                        </div>
-                    </div>
+                    <span class="stat-title">Top Talents</span>
+                </div>
+                <div class="stat-value">{{ top_talent_count }} Orang</div>
+                <div class="stat-sub">
+                    <i class="fa-solid fa-arrow-trend-up"></i> Avg Score > 75
                 </div>
             </div>
         </div>
 
         <div class="section-header">
-            <div>
-                <h2 class="fw-bold mb-1 text-white">Daftar Lowongan</h2>
-                <p class="text-muted mb-0">Kelola pertanyaan interview dan pantau kandidat.</p>
+            <div class="section-title">
+                <h2>Daftar Lowongan</h2>
+                <p>Kelola pertanyaan interview dan pantau kandidat.</p>
             </div>
-            <button class="btn btn-lg fw-bold text-white shadow-lg" 
-                    style="background: var(--accent); border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 0.95rem; border: none;"
-                    data-bs-toggle="modal" data-bs-target="#createJobModal">
-                <i class="fa-solid fa-plus me-2"></i> Buat Lowongan
+            <button class="btn-create" data-bs-toggle="modal" data-bs-target="#createJobModal">
+                <i class="fa-solid fa-plus"></i> Buat Lowongan
             </button>
         </div>
 
         {% if jobs %}
-        <div class="row g-4">
+        <div class="jobs-wrapper">
             {% for job in jobs %}
-            <div class="col-xl-3 col-lg-4 col-md-6">
-                <div class="job-card">
-                    <div class="job-card-header">
-                        <span class="badge-level">{{ job.level }}</span>
-                        <a href="{{ url_for('delete_job', id=job.id) }}" onclick="return confirm('Hapus lowongan ini?')" 
-                           class="text-muted" style="transition:0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'" title="Hapus">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                    <div class="job-card-body">
-                        <h5 class="fw-bold mb-2 text-white">{{ job.title }}</h5>
-                        <div class="text-muted small mb-4">
-                            <i class="fa-regular fa-clock me-1"></i> {{ job.created_at.strftime('%d %b %Y') }}
-                        </div>
-                        
-                        <div class="d-flex align-items-center gap-2 mb-4 p-2 rounded" style="background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.2);">
-                            <i class="fa-solid fa-bolt text-warning"></i>
-                            <span class="small text-white" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ job.skills }}</span>
-                        </div>
-
-                        <div class="mt-auto">
-                            <a href="{{ url_for('job_candidates', job_id=job.id) }}" class="btn-action">
-                                Lihat Kandidat
-                            </a>
-                        </div>
-                    </div>
+            <div class="job-card-container">
+                <div class="card-top">
+                    <span class="badge-level badge-{{ job.level }}">{{ job.level }}</span>
+                    <a href="{{ url_for('delete_job', id=job.id) }}" onclick="return confirm('Hapus lowongan ini?')" class="btn-delete" title="Hapus">
+                        <i class="fa-solid fa-trash"></i>
+                    </a>
                 </div>
+                
+                <h3 class="job-title">{{ job.title }}</h3>
+                <div class="job-date">
+                    <i class="fa-regular fa-clock"></i> {{ job.created_at.strftime('%d %b %Y') }}
+                </div>
+
+                <div class="info-bar">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span class="info-text">{{ job.skills }}</span>
+                </div>
+
+                <a href="{{ url_for('job_candidates', job_id=job.id) }}" class="btn-view">Lihat Kandidat</a>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-5 rounded-4" style="border: 2px dashed var(--border-glass); background: rgba(255,255,255,0.02);">
-            <div class="mb-3 opacity-50 text-secondary"><i class="fa-solid fa-clipboard-list fa-4x"></i></div>
-            <h4 class="fw-bold text-white">Belum ada Lowongan</h4>
-            <p class="text-muted">Buat lowongan pertama Anda untuk mulai merekrut.</p>
+        <div class="text-center py-5 rounded-4" style="border: 2px dashed rgba(255,255,255,0.1);">
+            <div class="mb-3 opacity-50" style="color: var(--text-muted);"><i class="fa-solid fa-clipboard-list fa-4x"></i></div>
+            <h4 class="fw-bold">Belum ada Lowongan</h4>
+            <p style="color: var(--text-muted);">Buat lowongan pertama Anda untuk mulai merekrut.</p>
         </div>
         {% endif %}
 
@@ -387,19 +431,19 @@
     <div class="modal fade" id="createJobModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header border-bottom border-secondary border-opacity-25">
-                    <h5 class="modal-title fw-bold text-white">Setup Interview Baru</h5>
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Setup Interview Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="{{ url_for('create_job') }}" method="POST">
-                    <div class="modal-body p-4">
+                    <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-8">
-                                <label class="form-label text-muted small fw-bold text-uppercase">Judul Posisi</label>
+                                <label class="form-label text-uppercase">Judul Posisi</label>
                                 <input type="text" name="title" class="form-control" placeholder="Misal: Product Manager" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label text-muted small fw-bold text-uppercase">Level</label>
+                                <label class="form-label text-uppercase">Level</label>
                                 <select name="level" class="form-select">
                                     <option value="Junior">Junior</option>
                                     <option value="Middle">Middle</option>
@@ -408,14 +452,14 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label text-muted small fw-bold text-uppercase">Skills (Untuk AI)</label>
+                                <label class="form-label text-uppercase">Skills (Untuk AI)</label>
                                 <textarea name="skills" class="form-control" rows="3" placeholder="Sebutkan skill teknis & soft skill..." required></textarea>
                             </div>
 
                             <div class="col-12 mt-3">
-                                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);">
+                                <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
                                     <div>
-                                        <span class="fw-bold d-block text-white">Input Pertanyaan Manual</span>
+                                        <span class="fw-bold d-block text-main">Input Pertanyaan Manual</span>
                                         <small class="text-muted">Matikan AI, saya buat soal sendiri.</small>
                                     </div>
                                     <div class="form-check form-switch">
@@ -425,22 +469,22 @@
                             </div>
 
                             <div id="manualInputSection" class="d-none mt-3">
-                                <div class="row g-2">
-                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control form-control-sm" placeholder="Pertanyaan 1"></div>
-                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control form-control-sm" placeholder="Kunci Jawaban 1"></div>
+                                <div class="row g-3">
+                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control" placeholder="Pertanyaan 1"></div>
+                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control" placeholder="Kunci Jawaban 1"></div>
                                     
-                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control form-control-sm" placeholder="Pertanyaan 2"></div>
-                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control form-control-sm" placeholder="Kunci Jawaban 2"></div>
+                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control" placeholder="Pertanyaan 2"></div>
+                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control" placeholder="Kunci Jawaban 2"></div>
                                     
-                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control form-control-sm" placeholder="Pertanyaan 3"></div>
-                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control form-control-sm" placeholder="Kunci Jawaban 3"></div>
+                                    <div class="col-6"><input type="text" name="manual_q[]" class="form-control" placeholder="Pertanyaan 3"></div>
+                                    <div class="col-6"><input type="text" name="manual_a[]" class="form-control" placeholder="Kunci Jawaban 3"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-top border-secondary border-opacity-25">
-                        <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn text-white fw-bold px-4" style="background: var(--accent);">Simpan</button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link text-muted text-decoration-none me-2" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn-create" style="box-shadow: none; padding: 10px 24px;">Simpan Lowongan</button>
                     </div>
                 </form>
             </div>
@@ -449,19 +493,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Toggle Logic
+        // Toggle Logic for Manual Questions
         const toggle = document.getElementById('toggleManual');
         const section = document.getElementById('manualInputSection');
         toggle.addEventListener('change', function() {
-            section.classList.toggle('d-none', !this.checked);
+            if(this.checked) {
+                section.classList.remove('d-none');
+            } else {
+                section.classList.add('d-none');
+            }
         });
-
-        // Copy Link Logic
-        function copyLink(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Link berhasil disalin!"); 
-            });
-        }
     </script>
 </body>
 </html>
