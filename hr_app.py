@@ -225,5 +225,38 @@ def all_candidates():
     
     return render_template('all_candidates.html', candidates=candidates)
 
+@app.route('/analytics')
+def analytics():
+    # 1. Data untuk Grafik Bar: Jumlah Kandidat per Lowongan
+    jobs = Job.query.all()
+    job_labels = [j.title for j in jobs]
+    candidate_counts = []
+    
+    for job in jobs:
+        count = Candidate.query.filter_by(job_id=job.id).count()
+        candidate_counts.append(count)
+    
+    # 2. Data untuk Grafik Donut: Kualitas Kandidat (Berdasarkan Skor AI)
+    # Kita kategorikan: High (>75), Medium (50-75), Low (<50)
+    all_responses = Response.query.all()
+    scores = [r.score_relevance for r in all_responses]
+    
+    high_tier = len([s for s in scores if s >= 75])
+    mid_tier = len([s for s in scores if 50 <= s < 75])
+    low_tier = len([s for s in scores if s < 50])
+    
+    # 3. Statistik Ringkas
+    avg_score = round(sum(scores) / len(scores), 1) if scores else 0
+    total_interviews = len(scores)
+
+    return render_template(
+        'analytics.html',
+        job_labels=json.dumps(job_labels),        # Kirim sebagai JSON untuk JS
+        candidate_counts=json.dumps(candidate_counts),
+        score_dist=json.dumps([high_tier, mid_tier, low_tier]),
+        avg_score=avg_score,
+        total_interviews=total_interviews
+    )
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
