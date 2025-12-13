@@ -2,8 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Console | Axion.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>HR Console | Axion.</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,16 +11,15 @@
     <style>
         /* --- 1. THEME VARIABLES --- */
         :root {
-            --palladian: #EEE9DF;       /* Teks Utama */
-            --truffle-trouble: #A35139; /* Aksen Utama (Orange/Rust) */
+            --palladian: #EEE9DF;
+            --truffle-trouble: #A35139;
             --truffle-hover: #c25e42;
-            --abyssal: #1B2632;         /* Sidebar BG & Modal Base */
-            --bg-dark: #05080f;         /* Background Utama (Deep Black) */
+            --abyssal: #1B2632;
+            --bg-dark: #05080f;
             --text-muted: #9ca3af;
             --sidebar-width: 260px;
         }
 
-        /* Reset & Base */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         
         body {
@@ -33,10 +31,8 @@
             position: relative;
         }
 
-        /* --- REVERTED BACKGROUND GLOW (MATCHING PREVIOUS DESIGN) --- */
         .glow-bg {
             position: fixed; width: 80vw; height: 80vw;
-            /* Kembali ke cahaya biru di tengah */
             background: radial-gradient(circle, rgba(44, 59, 77, 0.3) 0%, transparent 70%);
             filter: blur(100px); z-index: -1; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -46,7 +42,24 @@
         h1, h2, h3, h4, h5, h6 { color: var(--palladian); font-weight: 700; }
         a { text-decoration: none; }
 
-        /* --- 2. SIDEBAR --- */
+        /* --- 2. MOBILE HEADER (Baru: Hanya Muncul di HP) --- */
+        .mobile-header {
+            display: none; /* Default sembunyi di Desktop */
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 70px;
+            background: rgba(27, 38, 50, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .mobile-toggle { font-size: 24px; color: var(--palladian); cursor: pointer; }
+
+        /* --- 3. SIDEBAR --- */
         .sidebar {
             width: var(--sidebar-width);
             background-color: var(--abyssal);
@@ -57,62 +70,58 @@
             height: 100vh;
             padding: 30px 24px;
             z-index: 1000;
+            transition: transform 0.3s ease; /* Animasi geser */
+        }
+
+        /* Overlay Gelap saat Menu Mobile Buka */
+        .sidebar-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            backdrop-filter: blur(3px);
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 50px;
-            color: var(--palladian);
-            display: flex; align-items: center; gap: 12px;
+            font-size: 24px; font-weight: 800; margin-bottom: 50px;
+            color: var(--palladian); display: flex; align-items: center; gap: 12px;
         }
         .logo span { color: var(--truffle-trouble); }
 
         .nav-links { list-style: none; flex: 1; padding-left: 0; }
         .nav-links li { margin-bottom: 8px; }
-
         .nav-links a {
             display: flex; align-items: center; gap: 14px;
-            text-decoration: none;
-            color: var(--text-muted);
-            padding: 14px 16px;
-            border-radius: 12px;
-            transition: all 0.3s;
-            font-size: 14px;
-            font-weight: 600;
+            text-decoration: none; color: var(--text-muted);
+            padding: 14px 16px; border-radius: 12px;
+            transition: all 0.3s; font-size: 14px; font-weight: 600;
         }
-
         .nav-links a:hover, .nav-links a.active {
-            background-color: rgba(163, 81, 57, 0.1);
-            color: var(--truffle-trouble);
+            background-color: rgba(163, 81, 57, 0.1); color: var(--truffle-trouble);
         }
 
         .user-profile {
             display: flex; align-items: center; gap: 12px;
-            padding-top: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-
         .avatar {
-            width: 42px; height: 42px;
-            background-color: var(--truffle-trouble);
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
+            width: 42px; height: 42px; background-color: var(--truffle-trouble);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
             color: white; font-weight: 800;
         }
-
         .user-info h4 { font-size: 14px; margin: 0; }
         .user-info p { font-size: 12px; color: var(--text-muted); margin: 0; }
 
-        /* --- 3. MAIN CONTENT --- */
+        /* --- 4. MAIN CONTENT --- */
         .main-content {
             margin-left: var(--sidebar-width);
             flex: 1;
             padding: 40px 50px;
             width: calc(100% - var(--sidebar-width));
+            transition: margin 0.3s ease;
         }
 
-        /* --- STATS GRID --- */
+        /* STATS GRID */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -120,199 +129,144 @@
             margin-bottom: 50px;
         }
 
-        /* CARD STYLE: DARK GLASS GRADIENT (KEPT AS REQUESTED) */
         .stat-card {
             background: linear-gradient(180deg, rgba(27, 38, 50, 0.9) 0%, rgba(27, 38, 50, 0.6) 100%);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 24px;
+            border-radius: 20px; padding: 24px;
             display: flex; flex-direction: column; justify-content: center;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: transform 0.3s;
         }
         .stat-card:hover { transform: translateY(-5px); border-color: rgba(163, 81, 57, 0.3); }
-
         .stat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        
         .stat-icon {
-            width: 44px; height: 44px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--truffle-trouble); font-size: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 44px; height: 44px; background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            color: var(--truffle-trouble); font-size: 18px; border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
-        .stat-title {
-            font-size: 12px; font-weight: 700; text-transform: uppercase;
-            color: var(--text-muted); letter-spacing: 0.5px;
-        }
-
+        .stat-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
         .stat-value { font-size: 32px; font-weight: 800; color: var(--palladian); }
+        .stat-sub { font-size: 13px; color: #4ADE80; margin-top: 8px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
 
-        .stat-sub {
-            font-size: 13px; color: #4ADE80; margin-top: 8px;
-            display: flex; align-items: center; gap: 6px; font-weight: 600;
-        }
-
-        /* --- HEADER & ACTION --- */
+        /* HEADER & ACTION */
         .section-header {
             display: flex; justify-content: space-between; align-items: flex-end;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-
         .section-title h2 { font-size: 24px; margin-bottom: 8px; }
         .section-title p { color: var(--text-muted); font-size: 14px; margin: 0; }
 
         .btn-create {
-            background-color: var(--truffle-trouble);
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 10px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(163, 81, 57, 0.3);
+            background-color: var(--truffle-trouble); color: white; border: none;
+            padding: 14px 28px; border-radius: 12px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; gap: 10px;
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(163, 81, 57, 0.3);
         }
-        .btn-create:hover { 
-            background-color: var(--truffle-hover); 
-            transform: translateY(-2px);
-        }
+        .btn-create:hover { background-color: var(--truffle-hover); transform: translateY(-2px); }
 
-        /* --- JOB CARDS GRID --- */
+        /* JOB CARDS */
         .jobs-wrapper {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 24px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px;
         }
-
-        /* CARD STYLE: DARK GLASS GRADIENT (KEPT AS REQUESTED) */
         .job-card-container {
             background: linear-gradient(180deg, rgba(27, 38, 50, 0.9) 0%, rgba(27, 38, 50, 0.5) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 28px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s;
-            display: flex; flex-direction: column;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
+            backdrop-filter: blur(10px); border-radius: 20px; padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;
+            display: flex; flex-direction: column; height: 100%; position: relative; overflow: hidden;
         }
         .job-card-container:hover {
-            transform: translateY(-5px);
-            border-color: var(--truffle-trouble);
+            transform: translateY(-5px); border-color: var(--truffle-trouble);
             box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
         }
-
-        .card-top {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            margin-bottom: 20px;
-        }
-
-        /* Badge Style */
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .badge-level {
-            background: rgba(163, 81, 57, 0.15);
-            color: var(--truffle-trouble);
-            padding: 6px 14px;
-            border-radius: 50px;
-            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-            border: 1px solid rgba(163, 81, 57, 0.2);
+            background: rgba(163, 81, 57, 0.15); color: var(--truffle-trouble);
+            padding: 6px 14px; border-radius: 50px; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(163, 81, 57, 0.2);
         }
-        /* Variations */
         .badge-Senior { color: #C084FC; background: rgba(192, 132, 252, 0.1); border-color: rgba(192, 132, 252, 0.2); }
         .badge-Middle { color: #4ADE80; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.2); }
-
         .btn-delete {
-            background: rgba(255,255,255,0.05); 
-            border: none; color: var(--text-muted);
-            width: 32px; height: 32px; border-radius: 8px;
-            cursor: pointer; transition: all 0.2s;
+            background: rgba(255,255,255,0.05); border: none; color: var(--text-muted);
+            width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
             display: flex; align-items: center; justify-content: center;
         }
         .btn-delete:hover { background: rgba(255, 0, 0, 0.1); color: #ff6b6b; }
-
         .job-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--palladian); }
-
-        .job-date {
-            font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
-            display: flex; align-items: center; gap: 8px;
-        }
-
+        .job-date { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
         .info-bar {
-            background-color: rgba(0, 0, 0, 0.2);
-            color: var(--palladian);
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            display: flex; align-items: center; gap: 10px;
-            margin-bottom: 24px;
-            flex-grow: 1;
+            background-color: rgba(0, 0, 0, 0.2); color: var(--palladian);
+            padding: 12px 16px; border-radius: 12px; font-size: 13px;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 24px; flex-grow: 1;
             border: 1px solid rgba(255,255,255,0.05);
         }
         .info-bar i { color: var(--truffle-trouble); }
-        
-        .info-text {
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-        }
-
+        .info-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .btn-view {
-            width: 100%;
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--palladian);
-            padding: 14px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            font-weight: 600;
+            width: 100%; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--palladian); padding: 14px; border-radius: 12px; cursor: pointer;
+            transition: all 0.2s; text-align: center; font-weight: 600;
         }
         .btn-view:hover {
-            border-color: var(--truffle-trouble);
-            color: var(--truffle-trouble);
-            background: rgba(163, 81, 57, 0.05);
+            border-color: var(--truffle-trouble); color: var(--truffle-trouble); background: rgba(163, 81, 57, 0.05);
         }
 
-        /* --- MODAL STYLING --- */
-        .modal-content {
-            background-color: var(--abyssal);
-            color: var(--palladian);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
+        /* MODAL */
+        .modal-content { background-color: var(--abyssal); color: var(--palladian); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; }
         .modal-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; }
         .modal-body { padding: 30px; }
         .modal-footer { border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 24px; }
         .btn-close { filter: invert(1); opacity: 0.7; }
-        
-        .form-control, .form-select {
-            background-color: rgba(0, 0, 0, 0.3) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            color: var(--palladian) !important;
-            border-radius: 12px;
-            padding: 12px;
-        }
+        .form-control, .form-select { background-color: rgba(0, 0, 0, 0.3) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: var(--palladian) !important; border-radius: 12px; padding: 12px; }
         .form-control::placeholder { color: var(--text-muted); opacity: 0.5; }
-        .form-control:focus, .form-select:focus {
-            box-shadow: none;
-            border-color: var(--truffle-trouble) !important;
-        }
+        .form-control:focus, .form-select:focus { box-shadow: none; border-color: var(--truffle-trouble) !important; }
         .form-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; }
-        
-        /* Toggle Switch */
         .form-check-input { background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
         .form-check-input:checked { background-color: var(--truffle-trouble); border-color: var(--truffle-trouble); }
+        .alert-custom { background: rgba(74, 222, 128, 0.1); border: 1px solid #4ade80; color: #86efac; border-radius: 12px; }
 
-        /* Alert Styling */
-        .alert-custom {
-            background: rgba(74, 222, 128, 0.1); border: 1px solid #4ade80; color: #86efac; border-radius: 12px;
+        /* ========================================= */
+        /* --- MEDIA QUERY: KHUSUS MOBILE (HP) --- */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            /* 1. Tampilkan Navbar Atas */
+            .mobile-header { display: flex; }
+
+            /* 2. Sembunyikan Sidebar (Geser ke Kiri) */
+            .sidebar {
+                transform: translateX(-100%);
+                top: 0; 
+                z-index: 2001; /* Di atas navbar */
+            }
+            .sidebar.active {
+                transform: translateX(0); /* Geser masuk saat aktif */
+                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            }
+
+            /* 3. Overlay muncul saat sidebar aktif */
+            .sidebar-overlay.active { display: block; }
+
+            /* 4. Konten Utama Full Width & Turun ke bawah Navbar */
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 24px 20px;
+                margin-top: 70px; /* Jarak untuk navbar */
+            }
+
+            /* 5. Header Section Stack */
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .btn-create { width: 100%; justify-content: center; }
+
+            /* 6. Jobs Grid 1 Kolom */
+            .jobs-wrapper {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -320,14 +274,29 @@
 
     <div class="glow-bg"></div>
 
-    <aside class="sidebar">
-        <div class="logo">
-            <img src="{{ url_for('static', filename='AxionLogo.png') }}" alt="Logo Axion" style="height: 40px; width: auto;"> 
+    <div class="mobile-header">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{{ url_for('static', filename='logo-anda.png') }}" alt="Logo" style="height: 30px;">
+            <span style="font-weight: 800; font-size: 1.2rem; color: var(--palladian);">Axion<span style="color: var(--truffle-trouble);">.</span></span>
+        </div>
+        <i class="fa-solid fa-bars mobile-toggle" id="menuToggle"></i>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo d-none d-md-flex">
+            <img src="{{ url_for('static', filename='AxionLogo.png') }}" alt="Logo" style="height: 32px; width: auto;">
             Axion<span>HRD</span>
         </div>
         
+        <div class="d-md-none mb-4 d-flex justify-content-between align-items-center">
+            <span class="text-muted small fw-bold">MENU UTAMA</span>
+            <i class="fa-solid fa-xmark fs-4" style="cursor: pointer;" id="menuClose"></i>
+        </div>
+        
         <ul class="nav-links">
-            <li><a href="#" class="active"><i class="fa-solid fa-table-columns"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('dashboard') }}" class="active"><i class="fa-solid fa-table-columns"></i> Dashboard</a></li>
             <li><a href="{{ url_for('all_candidates') }}"> <i class="fa-solid fa-users"></i> Kandidat</a></li>
             <li><a href="{{ url_for('analytics') }}"><i class="fa-solid fa-chart-pie"></i> Analytics</a></li>
         </ul>
@@ -503,6 +472,21 @@
                 section.classList.add('d-none');
             }
         });
+
+        // --- MOBILE MENU LOGIC (BARU) ---
+        const menuToggle = document.getElementById('menuToggle');
+        const menuClose = document.getElementById('menuClose');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        menuToggle.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+        if(menuClose) menuClose.addEventListener('click', toggleMenu);
     </script>
 </body>
 </html>
