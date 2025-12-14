@@ -75,7 +75,7 @@ Pastikan Anda telah menginstal:
 
 Aplikasi ini menggunakan **Generative AI** melalui API, sehingga tidak memerlukan pengunduhan file model fisik (seperti `.h5`, `.pkl`, atau `.pt`) ke penyimpanan lokal.
 
-* **Model yang digunakan:** Google Gemini 1.5 Flash.
+* **Model yang digunakan:** Google Gemini 2.5 Flash.
 * **Cara Akses:** Model diakses secara cloud melalui library `google-generativeai`.
 * **Implementasi:** Logika integrasi AI terdapat pada file `ai_engine.py`.
 
