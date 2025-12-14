@@ -2,32 +2,56 @@ import os
 import cloudinary
 import cloudinary.uploader
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from models import db, Job, Candidate, Question, Response # Pastikan import Response & Question
+from models import db, Job, Candidate, Question, Response 
 from werkzeug.utils import secure_filename
 from ai_engine import process_interview_answer
 
 app = Flask(__name__)
-app.secret_key = 'rahasia_kandidat'
+app.secret_key = os.getenv("SECRET_KEY")
 
 cloudinary.config( 
-  cloud_name = "dki3iburr", 
-  api_key = "539567615736385", 
-  api_secret = "U-U3SQkzoeLjdX-3FJTqT-rPRYc",
+  cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME"), 
+  api_key = os.getenv("CLOUDINARY_API_KEY"), 
+  api_secret = os.getenv("CLOUDINARY_API_SECRET"),
   secure = True
 )
 
-# Konfigurasi Upload Folder (PENTING untuk simpan audio sementara)
+# Konfigurasi Upload Folder 
 UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# DB URI (Pastikan tetap menggunakan Link Neon Anda)
-DB_URI = "postgresql://neondb_owner:npg_2LkDPfsu7vKy@ep-crimson-breeze-ahdy5lee-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# --- DB CONFIGURATION (FIXED FOR PG8000) ---
+# DB URI 
+DB_URI = os.getenv("DATABASE_URL")
+
+
+if not DB_URI:
+    
+    DB_URI = "postgresql://neondb_owner:npg_2LkDPfsu7vKy@ep-crimson-breeze-ahdy5lee-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" 
+
+# 1. Ganti Driver ke pg8000
 if DB_URI.startswith("postgres://"):
-    DB_URI = DB_URI.replace("postgres://", "postgresql://", 1)
+    DB_URI = DB_URI.replace("postgres://", "postgresql+pg8000://", 1)
+elif DB_URI.startswith("postgresql://"):
+    DB_URI = DB_URI.replace("postgresql://", "postgresql+pg8000://", 1)
+
+# 2. HAPUS PARAMETER SSL (PENTING!)
+# pg8000 akan crash jika ada '?sslmode=...', jadi kita hapus semua query params
+if "?" in DB_URI:
+    DB_URI = DB_URI.split("?")[0]
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,        # Cek koneksi sebelum dipakai 
+    "pool_recycle": 300,          # Daur ulang koneksi setiap 5 menit (300 detik)
+    "pool_size": 10,              # Jumlah koneksi standby
+    "max_overflow": 20            # Toleransi kelebihan koneksi
+}
+
 
 db.init_app(app)
 
@@ -63,7 +87,6 @@ def interview_room(candidate_id):
     candidate = Candidate.query.get_or_404(candidate_id)
     job = Job.query.get(candidate.job_id)
     
-    # Ambil semua pertanyaan untuk job ini
     questions = Question.query.filter_by(job_id=job.id).all()
     
     return render_template('interview_room.html', candidate=candidate, job=job, questions=questions)
@@ -104,11 +127,11 @@ def submit_answer():
         new_response = Response(
             candidate_id=candidate_id,
             question_id=question_id,
-            audio_filename=video_url, # Kolom ini sekarang isinya URL Video
+            audio_filename=video_url, 
             transcript=ai_result['transcript'],
             score_relevance=ai_result['score'],
             sentiment=ai_result['sentiment'],
-            cheat_faults=int(cheat_count) # Simpan jumlah curang
+            cheat_faults=int(cheat_count) 
         )
         
         db.session.add(new_response)

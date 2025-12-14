@@ -8,8 +8,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# PASTIKAN INI SAMA DENGAN LINK NEON DI HR_APP.PY / CANDIDATE_APP.PY
-# Ganti ... dengan password/host asli Anda
 DB_URI = os.environ.get("DATABASE_URL", "postgresql://neondb_owner:npg_2LkDPfsu7vKy@ep-crimson-breeze-ahdy5lee-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
 
 if DB_URI.startswith("postgres://"):

@@ -12,7 +12,6 @@ print("\n=== DAFTAR MODEL YANG TERSEDIA ===")
 
 try:
     for m in genai.list_models():
-        # Kita hanya cari model yang bisa generate content (bukan embedding)
         if 'generateContent' in m.supported_generation_methods:
             print(f"- Nama: {m.name}")
             print(f"  Deskripsi: {m.description[:50]}...")

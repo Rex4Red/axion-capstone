@@ -29,7 +29,7 @@ class Candidate(db.Model):
     email = db.Column(db.String(100))
     interview_date = db.Column(db.DateTime, default=datetime.utcnow)
     
-# ... (Class Candidate diatasnya) ...
+
 
 # Model Response (Jawaban Audio)
 class Response(db.Model):

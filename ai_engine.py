@@ -40,11 +40,8 @@ def process_interview_answer(media_url, question_text, ideal_answer):
         # C. ANALISIS GEMINI
         print("🧠 Mengirim ke Gemini Flash Latest...")
         
-        # --- PERBAIKAN: GUNAKAN MODEL YANG TERBUKTI BERHASIL ---
+
         model = genai.GenerativeModel('gemini-2.5-flash')
-        # -------------------------------------------------------
-        
-        # ... (Kode atas tetap sama)
 
         prompt = f"""
         Peran: HR Recruiter yang Sangat Tegas & Teliti.
@@ -71,8 +68,6 @@ def process_interview_answer(media_url, question_text, ideal_answer):
             "feedback": "Kritik pedas jika tidak nyambung. Saran jika nyambung."
         }}
         """
-        
-        # ... (Kode bawah tetap sama)
 
         response = model.generate_content(
             [prompt, media_file],

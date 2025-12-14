@@ -137,7 +137,7 @@
     <div class="mobile-header">
         <div class="d-flex align-items-center gap-2">
             <img src="{{ url_for('static', filename='AxionLogo.png') }}" alt="Logo" style="height: 30px;">
-            <span style="font-weight: 800; font-size: 1.2rem; color: var(--palladian);">Axion<span style="color: var(--truffle-trouble);">.</span></span>
+            <span style="font-weight: 800; font-size: 1.2rem; color: var(--palladian);">Axion<span style="color: var(--truffle-trouble);">HRD</span></span>
         </div>
         <i class="fa-solid fa-bars mobile-toggle" id="menuToggle"></i>
     </div>
@@ -208,9 +208,16 @@
                             </td>
                             <td>#{{ cand.id }}</td>
                             <td class="text-end">
-                                <a href="{{ url_for('candidate_report', candidate_id=cand.id) }}" class="btn-action">
-                                    <i class="fa-solid fa-file-lines me-1"></i> Lihat
-                                </a>
+                              <a href="{{ url_for('candidate_report', candidate_id=cand.id) }}" class="btn-action">
+                                  <i class="fa-solid fa-file-lines me-1"></i> Lihat
+                              </a>
+                          
+                              <a href="{{ url_for('download_candidate_json', candidate_id=cand.id) }}" 
+                                 class="btn-action ms-2" 
+                                 title="Download JSON"
+                                 style="background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2);">
+                                  <i class="fa-solid fa-download"></i>
+                              </a>
                             </td>
                         </tr>
                         {% endfor %}

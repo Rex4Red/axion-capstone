@@ -1,7 +1,8 @@
 import os
 import json
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from models import db, Job, Question, Candidate, Response
+from datetime import datetime
 from dotenv import load_dotenv
 import google.generativeai as genai
 
@@ -12,8 +13,6 @@ app = Flask(__name__)
 # Gunakan Secret Key dari .env (atau default untuk lokal)
 app.secret_key = os.getenv("SECRET_KEY", "rahasia_hrd_default_dev")
 
-# --- KONFIGURASI DATABASE (PERBAIKAN DRIVER PG8000) ---
-# Jangan tulis link DB di sini! Ambil dari .env agar aman.
 # --- DB CONFIGURATION (FIXED FOR PG8000) ---
 # DB URI (Pastikan tetap menggunakan Link Neon Anda)
 DB_URI = os.getenv("DATABASE_URL")
@@ -35,6 +34,16 @@ if "?" in DB_URI:
     DB_URI = DB_URI.split("?")[0]
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# --- TAMBAHKAN BAGIAN INI (SOLUSI ERROR 500 SAAT IDLE) ---
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,        # Cek koneksi sebelum dipakai (PENTING!)
+    "pool_recycle": 300,          # Daur ulang koneksi setiap 5 menit (300 detik)
+    "pool_size": 10,              # Jumlah koneksi standby
+    "max_overflow": 20            # Toleransi kelebihan koneksi
+}
+# ---------------------------------------------------------
 
 db.init_app(app)
 
@@ -52,7 +61,7 @@ def generate_questions_from_ai(title, level, skills):
     """
     Minta Gemini buatkan 3 soal interview teknis & behavioral
     """
-    # Cek API Key dulu
+    # Cek API Key
     if not GOOGLE_API_KEY:
         return [
             {"q": "Jelaskan pengalaman Anda?", "a": "Pengalaman relevan."},
@@ -125,7 +134,7 @@ def dashboard():
         jobs=jobs, 
         candidate_url=CANDIDATE_SITE_URL,
         total_candidates=total_candidates,
-        top_talent_count=top_talent_count  # <-- Kirim data baru ini
+        top_talent_count=top_talent_count  
     )
 
 @app.route('/create-job', methods=['POST'])
@@ -258,5 +267,107 @@ def analytics():
         total_interviews=total_interviews
     )
 
+# --- FITUR BARU: DOWNLOAD JSON ---
+@app.route('/candidate/<int:candidate_id>/download/json')
+def download_candidate_json(candidate_id):
+    try:
+        # 1. Ambil Data
+        candidate = Candidate.query.get_or_404(candidate_id)
+        job = Job.query.get(candidate.job_id)
+        questions = Question.query.filter_by(job_id=job.id).all()
+        responses = Response.query.filter_by(candidate_id=candidate.id).all()
+
+        # 2. Hitung Statistik & Checklist
+        total_score = 0
+        scores_list = []
+        video_checklist = []
+        
+        response_map = {r.question_id: r for r in responses}
+
+        for i, q in enumerate(questions, 1):
+            resp = response_map.get(q.id)
+            
+            # Data Checklist
+            video_checklist.append({
+                "positionId": i,
+                "question": q.question_text,
+                "isVideoExist": True if resp else False,
+                "recordedVideoUrl": resp.audio_filename if resp else None
+            })
+
+            # Data Scoring
+            score_val = resp.score_relevance if resp else 0
+            total_score += score_val
+            scores_list.append({
+                "id": i,
+                "score": score_val
+            })
+
+        avg_score = round(total_score / len(questions), 2) if questions else 0
+        decision = "PASSED" if avg_score >= 70 else "FAILED"
+
+        # --- BAGIAN PERBAIKAN (ANTI CRASH) ---
+        # Kita gunakan getattr untuk cek apakah kolom 'applied_at' ada di database/model
+        # Jika tidak ada, gunakan tanggal hari ini atau string "N/A"
+        if hasattr(candidate, 'applied_at') and candidate.applied_at:
+            applied_date = str(candidate.applied_at)
+        else:
+            # Fallback jika kolom tidak ada di database lama
+            applied_date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') 
+        # -------------------------------------
+
+        reviewed_date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+        # 3. Susun JSON
+        json_data = {
+            "success": True,
+            "data": {
+                "id": candidate.id,
+                "candidate": {
+                    "name": candidate.name,
+                    "email": candidate.email,
+                    "photoUrl": f"https://ui-avatars.com/api/?name={candidate.name}&background=random"
+                },
+                "certification": {
+                    "abbreviatedType": "AXION",
+                    "normalType": f"INTERVIEW_{job.level.upper()}",
+                    "submittedAt": applied_date, # Menggunakan variabel aman
+                    "status": "FINISHED",
+                    "projectType": job.title,
+                    "examScore": avg_score,
+                    "assess": { "project": False, "interviews": True }
+                },
+                "reviewChecklists": {
+                    "project": [],
+                    "interviews": video_checklist
+                },
+                "pastReviews": [
+                    {
+                        "assessorProfile": { "id": 1, "name": "Axion AI", "photoUrl": None },
+                        "decision": decision,
+                        "reviewedAt": reviewed_date,
+                        "scoresOverview": { "interview": avg_score, "total": avg_score },
+                        "reviewChecklistResult": {
+                            "interviews": { "minScore": 0, "maxScore": 100, "scores": scores_list }
+                        },
+                        "notes": "Auto-generated report by Axion HRD System."
+                    }
+                ]
+            }
+        }
+
+        # 4. Force Download
+        response = jsonify(json_data)
+        safe_name = candidate.name.replace(' ', '_')
+        safe_job = job.title.replace(' ', '_')
+        filename = f"Report_{safe_name}_{safe_job}.json"
+        
+        response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
+
+    except Exception as e:
+        print(f"ERROR DOWNLOAD JSON: {e}")
+        return jsonify({"error": str(e)}), 500
+        
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
