@@ -28,7 +28,7 @@ Pastikan Anda telah menginstal:
 1.  **Clone Repository**
     Unduh kode sumber proyek ke komputer Anda:
     ```bash
-    git clone [https://huggingface.co/spaces/Rex4Red/Axion-HRD](https://huggingface.co/spaces/Rex4Red/Axion-HRD)
+    git clone [https://github.com/Rex4Red/axion-capstone.git
     cd Axion-HRD
     ```
 
