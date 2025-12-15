@@ -1,8 +1,9 @@
 import os
 import json
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from models import db, Job, Question, Candidate, Response
 from datetime import datetime
+from functools import wraps  # <--- WAJIB: Untuk decorator login
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session # <--- WAJIB: Ada session
+from models import db, Job, Question, Candidate, Response
 from dotenv import load_dotenv
 import google.generativeai as genai
 
@@ -13,13 +14,15 @@ app = Flask(__name__)
 # Gunakan Secret Key dari .env (atau default untuk lokal)
 app.secret_key = os.getenv("SECRET_KEY", "rahasia_hrd_default_dev")
 
-# --- DB CONFIGURATION (FIXED FOR PG8000) ---
-# DB URI (Pastikan tetap menggunakan Link Neon Anda)
+# --- KONFIGURASI LOGIN ADMIN ---
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "A25-CS383")
+
+# --- KONFIGURASI DATABASE (PERBAIKAN DRIVER PG8000) ---
 DB_URI = os.getenv("DATABASE_URL")
 
-# Jika DB_URI None (misal test lokal tanpa .env), beri fallback string kosong atau error
 if not DB_URI:
-    # Fallback string (opsional, sesuaikan dengan link neon anda jika hardcode)
+    # Fallback string (opsional)
     DB_URI = "postgresql://neondb_owner:npg_2LkDPfsu7vKy@ep-crimson-breeze-ahdy5lee-pooler.c-3.us-east-1.aws.neon.tech/neondb" 
 
 # 1. Ganti Driver ke pg8000
@@ -29,21 +32,19 @@ elif DB_URI.startswith("postgresql://"):
     DB_URI = DB_URI.replace("postgresql://", "postgresql+pg8000://", 1)
 
 # 2. HAPUS PARAMETER SSL (PENTING!)
-# pg8000 akan crash jika ada '?sslmode=...', jadi kita hapus semua query params
 if "?" in DB_URI:
     DB_URI = DB_URI.split("?")[0]
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- TAMBAHKAN BAGIAN INI (SOLUSI ERROR 500 SAAT IDLE) ---
+# --- SOLUSI ERROR 500 SAAT IDLE ---
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,        # Cek koneksi sebelum dipakai (PENTING!)
-    "pool_recycle": 300,          # Daur ulang koneksi setiap 5 menit (300 detik)
-    "pool_size": 10,              # Jumlah koneksi standby
-    "max_overflow": 20            # Toleransi kelebihan koneksi
+    "pool_pre_ping": True,        # Cek koneksi sebelum dipakai
+    "pool_recycle": 300,          # Daur ulang koneksi setiap 5 menit
+    "pool_size": 10,
+    "max_overflow": 20
 }
-# ---------------------------------------------------------
 
 db.init_app(app)
 
@@ -52,16 +53,21 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     genai.configure(api_key=GOOGLE_API_KEY)
 
-# --- KONFIGURASI URL KANDIDAT (PENTING!) ---
-# Ambil link Hugging Face dari .env, kalau tidak ada baru pakai localhost
+# --- KONFIGURASI URL KANDIDAT ---
 CANDIDATE_SITE_URL = os.getenv("CANDIDATE_SITE_URL", "http://127.0.0.1:5001")
+
+# --- DECORATOR: PENJAGA PINTU (LOGIN REQUIRED) ---
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'is_logged_in' not in session:
+            flash('Silakan login terlebih dahulu.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # --- FUNGSI AI GENERATOR SOAL ---
 def generate_questions_from_ai(title, level, skills):
-    """
-    Minta Gemini buatkan 3 soal interview teknis & behavioral
-    """
-    # Cek API Key
     if not GOOGLE_API_KEY:
         return [
             {"q": "Jelaskan pengalaman Anda?", "a": "Pengalaman relevan."},
@@ -70,9 +76,7 @@ def generate_questions_from_ai(title, level, skills):
         ]
 
     try:
-        # Gunakan model standar
         model = genai.GenerativeModel('gemini-1.5-flash')
-        
         prompt = f"""
         Bertindaklah sebagai Senior HR Recruiter.
         Saya butuh 3 (TIGA) pertanyaan interview spesifik untuk:
@@ -85,23 +89,18 @@ def generate_questions_from_ai(title, level, skills):
         
         Contoh Format Output:
         [
-            {{"q": "Pertanyaan pertama tentang teknis...", "a": "Jawaban ideal teknis..."}},
-            {{"q": "Pertanyaan kedua tentang studi kasus...", "a": "Solusi studi kasus..."}},
-            {{"q": "Pertanyaan ketiga tentang soft skill...", "a": "Attitude yang baik..."}}
+            {{"q": "Pertanyaan teknis...", "a": "Jawaban teknis..."}},
+            {{"q": "Pertanyaan studi kasus...", "a": "Solusi..."}},
+            {{"q": "Pertanyaan soft skill...", "a": "Attitude..."}}
         ]
         """
-        
         response = model.generate_content(prompt)
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
-        
-        # Debugging: Print hasil mentah dari AI untuk cek di terminal
         print(f"DEBUG AI RESPONSE: {clean_text}") 
-        
         return json.loads(clean_text)
 
     except Exception as e:
         print(f"Error Generate Soal: {e}")
-        # Fallback jika error, tetap berikan 3 soal default
         return [
             {"q": f"Apa tantangan terbesar sebagai {title}?", "a": "Problem solving."},
             {"q": f"Jelaskan pemahaman Anda tentang {skills}?", "a": "Penguasaan teknis."},
@@ -110,23 +109,46 @@ def generate_questions_from_ai(title, level, skills):
 
 # --- ROUTES ---
 
+# 1. ROUTE LOGIN & LOGOUT
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user = request.form.get('username')
+        pwd = request.form.get('password')
+        
+        if user == ADMIN_USERNAME and pwd == ADMIN_PASSWORD:
+            session['is_logged_in'] = True
+            session['user'] = user
+            flash('Login berhasil! Selamat datang.', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Username atau Password salah!', 'danger')
+            
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Anda telah logout.', 'info')
+    return redirect(url_for('login'))
+
+
+# 2. ROUTE UTAMA (DILINDUNGI @login_required)
+
 @app.route('/')
+@login_required  # <--- Pasang Gembok
 def dashboard():
     jobs = Job.query.order_by(Job.created_at.desc()).all()
-    
-    # 1. Hitung Total Kandidat
     total_candidates = Candidate.query.count()
 
-    # 2. Hitung Top Talents (Logika: Rata-rata Nilai > 75)
     candidates = Candidate.query.all()
     top_talent_count = 0
     
     for cand in candidates:
         responses = Response.query.filter_by(candidate_id=cand.id).all()
         if responses:
-            # Hitung rata-rata skor kandidat ini
             avg_score = sum([r.score_relevance for r in responses]) / len(responses)
-            if avg_score > 75: # Ambang batas "Pintar"
+            if avg_score > 75:
                 top_talent_count += 1
     
     return render_template(
@@ -134,10 +156,11 @@ def dashboard():
         jobs=jobs, 
         candidate_url=CANDIDATE_SITE_URL,
         total_candidates=total_candidates,
-        top_talent_count=top_talent_count  
+        top_talent_count=top_talent_count
     )
 
 @app.route('/create-job', methods=['POST'])
+@login_required  # <--- Pasang Gembok
 def create_job():
     try:
         title = request.form.get('title')
@@ -183,12 +206,14 @@ def create_job():
     return redirect(url_for('dashboard'))
 
 @app.route('/job/<int:job_id>/candidates')
+@login_required  # <--- Pasang Gembok
 def job_candidates(job_id):
     job = Job.query.get_or_404(job_id)
     candidates = Candidate.query.filter_by(job_id=job_id).all()
     return render_template('candidates_list.html', job=job, candidates=candidates)
 
 @app.route('/candidate/<int:candidate_id>/report')
+@login_required  # <--- Pasang Gembok
 def candidate_report(candidate_id):
     candidate = Candidate.query.get_or_404(candidate_id)
     job = Job.query.get(candidate.job_id)
@@ -200,16 +225,17 @@ def candidate_report(candidate_id):
         q = Question.query.get(resp.question_id)
         report_data.append({
             "question": q.question_text,
-            "answer_audio": resp.audio_filename, # Bisa video/audio
+            "answer_audio": resp.audio_filename,
             "transcript": resp.transcript,
             "score": resp.score_relevance,
             "sentiment": resp.sentiment,
-            "cheat_faults": getattr(resp, 'cheat_faults', 0) # Menghindari error jika kolom belum ada
+            "cheat_faults": getattr(resp, 'cheat_faults', 0)
         })
         
     return render_template('report_detail.html', candidate=candidate, job=job, reports=report_data)
 
 @app.route('/delete-job/<int:id>')
+@login_required  # <--- Pasang Gembok
 def delete_job(id):
     try:
         job = Job.query.get_or_404(id)
@@ -227,16 +253,14 @@ def delete_job(id):
     return redirect(url_for('dashboard'))
 
 @app.route('/candidates')
+@login_required  # <--- Pasang Gembok
 def all_candidates():
-    # Mengambil semua kandidat dan mengurutkan dari yang terbaru
-    # Kita join dengan Job agar bisa menampilkan melamar di posisi apa
     candidates = db.session.query(Candidate, Job).join(Job, Candidate.job_id == Job.id).order_by(Candidate.id.desc()).all()
-    
     return render_template('all_candidates.html', candidates=candidates)
 
 @app.route('/analytics')
+@login_required  # <--- Pasang Gembok
 def analytics():
-    # 1. Data untuk Grafik Bar: Jumlah Kandidat per Lowongan
     jobs = Job.query.all()
     job_labels = [j.title for j in jobs]
     candidate_counts = []
@@ -245,8 +269,6 @@ def analytics():
         count = Candidate.query.filter_by(job_id=job.id).count()
         candidate_counts.append(count)
     
-    # 2. Data untuk Grafik Donut: Kualitas Kandidat (Berdasarkan Skor AI)
-    # Kita kategorikan: High (>75), Medium (50-75), Low (<50)
     all_responses = Response.query.all()
     scores = [r.score_relevance for r in all_responses]
     
@@ -254,30 +276,27 @@ def analytics():
     mid_tier = len([s for s in scores if 50 <= s < 75])
     low_tier = len([s for s in scores if s < 50])
     
-    # 3. Statistik Ringkas
     avg_score = round(sum(scores) / len(scores), 1) if scores else 0
     total_interviews = len(scores)
 
     return render_template(
         'analytics.html',
-        job_labels=json.dumps(job_labels),        # Kirim sebagai JSON untuk JS
+        job_labels=json.dumps(job_labels),
         candidate_counts=json.dumps(candidate_counts),
         score_dist=json.dumps([high_tier, mid_tier, low_tier]),
         avg_score=avg_score,
         total_interviews=total_interviews
     )
 
-# --- FITUR BARU: DOWNLOAD JSON ---
 @app.route('/candidate/<int:candidate_id>/download/json')
+@login_required  # <--- Pasang Gembok
 def download_candidate_json(candidate_id):
     try:
-        # 1. Ambil Data
         candidate = Candidate.query.get_or_404(candidate_id)
         job = Job.query.get(candidate.job_id)
         questions = Question.query.filter_by(job_id=job.id).all()
         responses = Response.query.filter_by(candidate_id=candidate.id).all()
 
-        # 2. Hitung Statistik & Checklist
         total_score = 0
         scores_list = []
         video_checklist = []
@@ -286,39 +305,27 @@ def download_candidate_json(candidate_id):
 
         for i, q in enumerate(questions, 1):
             resp = response_map.get(q.id)
-            
-            # Data Checklist
             video_checklist.append({
                 "positionId": i,
                 "question": q.question_text,
                 "isVideoExist": True if resp else False,
                 "recordedVideoUrl": resp.audio_filename if resp else None
             })
-
-            # Data Scoring
             score_val = resp.score_relevance if resp else 0
             total_score += score_val
-            scores_list.append({
-                "id": i,
-                "score": score_val
-            })
+            scores_list.append({ "id": i, "score": score_val })
 
         avg_score = round(total_score / len(questions), 2) if questions else 0
         decision = "PASSED" if avg_score >= 70 else "FAILED"
 
-        # --- BAGIAN PERBAIKAN (ANTI CRASH) ---
-        # Kita gunakan getattr untuk cek apakah kolom 'applied_at' ada di database/model
-        # Jika tidak ada, gunakan tanggal hari ini atau string "N/A"
+        # Anti-Crash untuk applied_at
         if hasattr(candidate, 'applied_at') and candidate.applied_at:
             applied_date = str(candidate.applied_at)
         else:
-            # Fallback jika kolom tidak ada di database lama
             applied_date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') 
-        # -------------------------------------
-
+        
         reviewed_date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
 
-        # 3. Susun JSON
         json_data = {
             "success": True,
             "data": {
@@ -331,7 +338,7 @@ def download_candidate_json(candidate_id):
                 "certification": {
                     "abbreviatedType": "AXION",
                     "normalType": f"INTERVIEW_{job.level.upper()}",
-                    "submittedAt": applied_date, # Menggunakan variabel aman
+                    "submittedAt": applied_date,
                     "status": "FINISHED",
                     "projectType": job.title,
                     "examScore": avg_score,
@@ -356,7 +363,6 @@ def download_candidate_json(candidate_id):
             }
         }
 
-        # 4. Force Download
         response = jsonify(json_data)
         safe_name = candidate.name.replace(' ', '_')
         safe_job = job.title.replace(' ', '_')
@@ -368,6 +374,6 @@ def download_candidate_json(candidate_id):
     except Exception as e:
         print(f"ERROR DOWNLOAD JSON: {e}")
         return jsonify({"error": str(e)}), 500
-        
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
